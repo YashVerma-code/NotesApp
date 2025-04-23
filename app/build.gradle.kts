@@ -32,9 +32,14 @@ android {
 }
 
 dependencies {
+    // Navigation component
+    implementation("androidx.drawerlayout:drawerlayout:1.2.0")  // Keep only the latest version
+    implementation("com.google.android.material:material:1.11.0")  // Keep only the latest version
+    implementation("com.google.code.gson:gson:2.10.1")
 
     implementation(libs.appcompat)
-    implementation(libs.material)
+    // Remove this line since you're already explicitly defining material above
+    // implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.sdp)
