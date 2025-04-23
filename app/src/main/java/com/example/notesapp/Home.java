@@ -1,8 +1,10 @@
+// Home.java
 package com.example.notesapp;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -138,8 +140,11 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         Type type = new TypeToken<ArrayList<Note>>() {}.getType();
 
         if (json != null) {
-            return gson.fromJson(json, type);
+            ArrayList<Note> loadedNotes = gson.fromJson(json, type);
+            Log.d("NotesApp", "Loaded " + loadedNotes.size() + " notes");
+            return loadedNotes;
         } else {
+            Log.d("NotesApp", "No notes found, returning empty list");
             return new ArrayList<>();
         }
     }
