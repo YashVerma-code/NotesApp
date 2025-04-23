@@ -47,7 +47,8 @@
             app:layout_constraintEnd_toStartOf="@id/save_btn"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginEnd="10dp" />
+            android:layout_marginEnd="10dp"
+            />
 
         <ImageView
             android:id="@+id/save_btn"
