@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/black"
+    >
+
+    <TextView
+        android:id="@+id/viewFullScreen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="View Full Screen"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:drawablePadding="16dp"
+        android:gravity="center_vertical" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#333333" />
+
+    <TextView
+        android:id="@+id/removeImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Remove Image"
+        android:textColor="#FF5252"
+        android:textSize="18sp"
+        android:drawablePadding="16dp"
+        android:gravity="center_vertical" />
+
+</LinearLayout>

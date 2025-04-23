@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Outer Frame -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M3,5V3h4v2H5v2H3V5zM21,3v2h-2v2h-2V3h4zM3,21v-2h2v-2h2v4H3zM21,21h-4v-2h2v-2h2v4z" />
+
+    <!-- Scanning Line -->
+    <path
+        android:fillColor="#4CAF50"
+        android:strokeWidth="1"
+        android:pathData="M4,12h16"
+        android:strokeColor="#4CAF50"
+        android:strokeLineCap="round" />
+</vector>
