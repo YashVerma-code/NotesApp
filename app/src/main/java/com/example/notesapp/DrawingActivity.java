@@ -42,7 +42,7 @@ public class DrawingActivity extends AppCompatActivity {
         redoBtn = findViewById(R.id.redo_btn);
         clearBtn = findViewById(R.id.clear_btn);
         saveBtn = findViewById(R.id.save_btn);
-        cancelBtn = findViewById(R.id.cance);
+
 
         // Initialize color buttons
         colorBlackBtn = findViewById(R.id.color_black);
@@ -89,10 +89,6 @@ public class DrawingActivity extends AppCompatActivity {
             finish();
         });
 
-        cancelBtn.setOnClickListener(v -> {
-            setResult(RESULT_CANCELED);
-            finish();
-        });
 
         // Color buttons
         colorBlackBtn.setOnClickListener(v -> drawingView.setColor(Color.BLACK));
