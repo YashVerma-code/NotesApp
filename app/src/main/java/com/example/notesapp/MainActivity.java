@@ -67,11 +67,18 @@ public class MainActivity extends AppCompatActivity {
 
     private Note currentNote;
 
+    private String userId;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SharedPreferences userPrefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
+        userId = userPrefs.getString("userId", "null"); // Use a default or handle null if needed
+
 
         mainLayout = findViewById(R.id.mainLayout);
         colorPickerLayout = findViewById(R.id.colorPickerLayout);
@@ -326,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             // Create new note
-            Note newNote = new Note(title, content, currentBackgroundColor);
+            Note newNote = new Note(title, content, currentBackgroundColor,userId);
             notesList.add(0, newNote); // Add to beginning of list
             Log.d("NotesApp", "Created new note with color: " + currentBackgroundColor);
         }

@@ -16,13 +16,16 @@ public class Note implements Serializable {
     private ArrayList<ChecklistItem> checkboxes;
     private transient ArrayList<Bitmap> imageList; // Bitmaps are not serializable
 
-    public Note(String title, String content, int backgroundColor) {
+    private String userId; // New user ID field
+
+    public Note(String title, String content, int backgroundColor,String userId) {
         this.title = title;
         this.content = content;
         this.backgroundColor = backgroundColor;
         this.dateCreated = new Date();
         this.checkboxes = new ArrayList<>();
         this.imageList = new ArrayList<>();
+        this.userId = userId;
     }
 
     // Title
@@ -47,4 +50,8 @@ public class Note implements Serializable {
     // Images
     public ArrayList<Bitmap> getImageList() { return imageList; }
     public void setImageList(ArrayList<Bitmap> imageList) { this.imageList = imageList; }
+
+    // User ID
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 }

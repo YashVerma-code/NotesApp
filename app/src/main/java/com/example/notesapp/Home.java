@@ -207,14 +207,26 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     // Load saved notes from SharedPreferences
     private ArrayList<Note> loadNotes() {
         SharedPreferences sharedPreferences = getSharedPreferences("notes_prefs", MODE_PRIVATE);
+        SharedPreferences userData = getSharedPreferences("UserData", MODE_PRIVATE);
+        String userId = userData.getString("userId", "null"); // Retrieve the userId
+        if (userId == null) {
+            Toast.makeText(this, "User not logged in!", Toast.LENGTH_SHORT).show();
+            return new ArrayList<>();
+        }
         Gson gson = new Gson();
         String json = sharedPreferences.getString("notes", null);
         Type type = new TypeToken<ArrayList<Note>>() {}.getType();
 
         if (json != null) {
             ArrayList<Note> loadedNotes = gson.fromJson(json, type);
+            ArrayList<Note> userNotes = new ArrayList<Note>();
+            for (Note note : loadedNotes) {
+                if (note.getUserId() != null && note.getUserId().equals(userId)) {
+                    userNotes.add(note);
+                }
+            }
             Log.d("NotesApp", "Loaded " + loadedNotes.size() + " notes");
-            return loadedNotes;
+            return userNotes;
         } else {
             Log.d("NotesApp", "No notes found, returning empty list");
             return new ArrayList<>();
