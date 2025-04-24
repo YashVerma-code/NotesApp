@@ -1,7 +1,6 @@
 // MainActivity.java
 package com.example.notesapp;
 
-import android.content.SharedPreferences;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -12,8 +11,6 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-
-import androidx.activity.OnBackPressedCallback;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -24,36 +21,25 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.graphics.Insets;
 import androidx.core.view.WindowInsetsCompat;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     private ConstraintLayout mainLayout;
     private LinearLayout colorPickerLayout;
     private ImageView colorIcon;
-    private EditText titleEditText, contentEditText;
-    private Note currentNote;
-    private int currentBackgroundColor;
-
     private View plusIcon;
     private LinearLayout imageContent;
     private ActivityResultLauncher<Intent> cameraLauncher;
@@ -61,12 +47,22 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout imageContainer;
     private LinearLayout checkboxContainer;
     private ImageView backBtn;
+    //    Title and content and color variable
+    private EditText titleEditText;
+    private EditText contentEditText;
+    private int currentBackgroundColor;
+
+    // Image Variable
+    private ArrayList<Bitmap> imageList = new ArrayList<>();
+
+    // List to store checkbox data (text and checked status)
+    private ArrayList<ChecklistItem> checkboxItems = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
         mainLayout = findViewById(R.id.mainLayout);
         colorPickerLayout = findViewById(R.id.colorPickerLayout);
         colorIcon = findViewById(R.id.color_icon);
@@ -95,12 +91,16 @@ public class MainActivity extends AppCompatActivity {
 
         backBtn.setOnClickListener(view -> {
             saveNote();
+
+        titleEditText = findViewById(R.id.titleEditText);
+        contentEditText = findViewById(R.id.contentEditText);
+
+        backBtn.setOnClickListener(view -> {
             startActivity(new Intent(MainActivity.this, Home.class));
             finish();
         });
 
         // Initialize the horizontal scroll view with empty content
-        // Remove any placeholder images at startup
         if (imageContent.getChildCount() > 0) {
             imageContainer.setVisibility(View.VISIBLE);
             imageContent.removeAllViews();
@@ -159,7 +159,12 @@ public class MainActivity extends AppCompatActivity {
         currentBackgroundColor = ContextCompat.getColor(MainActivity.this, colorResId);
         mainLayout.setBackgroundColor(currentBackgroundColor);
         colorPickerLayout.setVisibility(View.GONE);
+
         Log.d("NotesApp", "Color set to: " + currentBackgroundColor);
+
+        int color = ContextCompat.getColor(MainActivity.this, colorResId);
+        currentBackgroundColor = color;
+
     }
 
     private void setupActivityResultLaunchers() {
@@ -225,7 +230,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         addList.setOnClickListener(view -> {
-            // Create and add a new checkbox list item
             addNewCheckboxItem();
             bottomSheetDialog.dismiss();
         });
@@ -233,9 +237,8 @@ public class MainActivity extends AppCompatActivity {
         bottomSheetDialog.show();
     }
 
-    private void addNewCheckboxItem() {
-        // Get the container for checkbox items
 
+    private void addNewCheckboxItem() {
         // Inflate the checkbox item layout
         View checkboxItemView = getLayoutInflater().inflate(R.layout.list_item_checkbox, null);
         CheckBox checkBox = checkboxItemView.findViewById(R.id.checkbox);
@@ -244,20 +247,14 @@ public class MainActivity extends AppCompatActivity {
 
         // Add listener to detect state changes
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // If checkbox is checked
-            if (isChecked) {
-                // Change the checkbox tint to black when checked
-                checkBox.setButtonTintList(android.content.res.ColorStateList.valueOf(
-                        ContextCompat.getColor(MainActivity.this, android.R.color.black)));
+            // Store checkbox data
+            ChecklistItem checkboxItem = new ChecklistItem(itemEditText.getText().toString(), isChecked);
+            checkboxItems.add(checkboxItem);
 
-                // You can also cross out or style the text if needed
+            // If checkbox is checked, strike-through the text
+            if (isChecked) {
                 itemEditText.setPaintFlags(itemEditText.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
             } else {
-                // Change back to white when unchecked
-                checkBox.setButtonTintList(android.content.res.ColorStateList.valueOf(
-                        ContextCompat.getColor(MainActivity.this, android.R.color.white)));
-
-                // Remove strikethrough if applied
                 itemEditText.setPaintFlags(itemEditText.getPaintFlags() & (~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG));
             }
         });
@@ -280,6 +277,8 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
             return false;
+            // Remove from checkboxItems list
+            checkboxItems.removeIf(item -> item.getItemText().equals(itemEditText.getText().toString()));
         });
 
         // Add the view to the container
@@ -412,89 +411,80 @@ public class MainActivity extends AppCompatActivity {
         checkboxContainer.addView(checkboxItemView, position);
     }
 
+    }
+
     private void addImageToNote(Bitmap bitmap) {
-        // Create a new image view with proper layout
+        if (!imageList.contains(bitmap)) {
+            imageList.add(bitmap);
+        }
+
         ImageView imageView = new ImageView(this);
-
-        // Update layout params for horizontal scrolling
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                dpToPx(200), // Width 200dp
-                dpToPx(200)  // Height 200dp
-        );
-        layoutParams.setMargins(dpToPx(4), 0, dpToPx(4), 0); // Add margins for spacing
-
+                dpToPx(200), dpToPx(200));
+        layoutParams.setMargins(dpToPx(4), 0, dpToPx(4), 0);
         imageView.setLayoutParams(layoutParams);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         imageView.setImageBitmap(bitmap);
 
-        // Add click listener to show options
         imageView.setOnClickListener(v -> {
             showImageOptions(imageView, bitmap);
         });
 
-        // Add to horizontal image layout
         imageContent.addView(imageView);
 
         // Make sure the image area is visible (in case it was previously hidden)
         imageContainer.setVisibility(View.VISIBLE);
+        if (imageContent.getParent().getParent() instanceof View) {
+            View scrollViewParent = (View) imageContent.getParent().getParent();
+            scrollViewParent.setVisibility(View.VISIBLE);
+        }
     }
 
-    // Method to show options when an image is tapped
     private void showImageOptions(ImageView imageView, Bitmap bitmap) {
-        // Create a bottom sheet dialog
         BottomSheetDialog optionsDialog = new BottomSheetDialog(MainActivity.this);
         View optionsView = LayoutInflater.from(getApplicationContext())
                 .inflate(R.layout.image_options_layout, null);
         optionsDialog.setContentView(optionsView);
 
-        // Setup options
         TextView viewFullScreen = optionsView.findViewById(R.id.viewFullScreen);
         TextView removeImage = optionsView.findViewById(R.id.removeImage);
 
-        // Option to view in full screen
         viewFullScreen.setOnClickListener(view -> {
             showImageFullScreen(bitmap);
             optionsDialog.dismiss();
         });
 
-        // Option to remove the image
         removeImage.setOnClickListener(view -> {
             imageContent.removeView(imageView);
-
-            // Hide the image container if no images left
+            imageList.remove(bitmap);
             if (imageContent.getChildCount() == 0) {
-                imageContainer.setVisibility(View.GONE);
-            }
 
+                imageContainer.setVisibility(View.GONE);
+
+                View scrollViewParent = (View) imageContent.getParent().getParent();
+                scrollViewParent.setVisibility(View.GONE);
+
+            }
             optionsDialog.dismiss();
         });
 
         optionsDialog.show();
     }
 
-    // Method to display image in full screen
     private void showImageFullScreen(Bitmap bitmap) {
-        // Create a dialog for full screen display
         Dialog fullScreenDialog = new Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-
-        // Create an ImageView to hold the bitmap
         ImageView fullScreenImage = new ImageView(this);
         fullScreenImage.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         fullScreenImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
         fullScreenImage.setImageBitmap(bitmap);
 
-        // Add click listener to close on tap
         fullScreenImage.setOnClickListener(v -> fullScreenDialog.dismiss());
-
         fullScreenDialog.setContentView(fullScreenImage);
         fullScreenDialog.show();
     }
 
-    // Helper method to convert dp to pixels
     private int dpToPx(int dp) {
-        float density = getResources().getDisplayMetrics().density;
-        return Math.round(dp * density);
+        return (int) (dp * getResources().getDisplayMetrics().density);
     }
 }
