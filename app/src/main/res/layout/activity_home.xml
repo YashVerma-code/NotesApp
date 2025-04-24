@@ -6,69 +6,93 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingHorizontal="@dimen/_12sdp"
-    tools:context=".MainActivity"
-    >
+    tools:context=".MainActivity">
 
-    <ImageButton
-        android:id="@+id/menuButton"
-        android:layout_width="@dimen/_30sdp"
-        android:layout_height="@dimen/_30sdp"
-        app:layout_constraintRight_toLeftOf="@id/title"
-        app:layout_constraintBottom_toTopOf="@id/searchNotesLayout"
-        android:src="@drawable/icon_menu"
-        android:background="@drawable/transparent_bg"
-        />
-
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
+    <!-- Top bar with menu button, title and logout button -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="My Notes"
-        app:layout_constraintLeft_toRightOf="@id/menuButton"
-        app:layout_constraintTop_toTopOf="parent"
-        android:textColor="@color/black"
         android:layout_marginTop="@dimen/_8sdp"
-        android:textSize="@dimen/_20sdp"
-        />
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/menuButton"
+            android:layout_width="@dimen/_30sdp"
+            android:layout_height="@dimen/_30sdp"
+            android:background="@drawable/transparent_bg"
+            android:contentDescription="Menu Button"
+            android:src="@drawable/icon_menu" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="My Notes"
+            android:textColor="@color/black"
+            android:textSize="@dimen/_20sdp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/logoutButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/dark_background"
+            android:text="Logout"
+            android:textColor="@color/white"
+            android:textSize="@dimen/_14sdp" />
+    </LinearLayout>
+
+    <!-- Search bar -->
     <LinearLayout
         android:id="@+id/searchNotesLayout"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/title"
-        android:background="@drawable/search_bg"
-        android:padding="@dimen/_5sdp"
         android:layout_marginTop="@dimen/_3sdp"
-        >
+        android:background="@drawable/search_bg"
+        android:orientation="horizontal"
+        android:padding="@dimen/_5sdp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topBar">
+
         <ImageView
             android:layout_width="@dimen/_30sdp"
             android:layout_height="@dimen/_30sdp"
-            android:src="@drawable/icon_search"
             android:layout_marginEnd="@dimen/_8sdp"
-            android:contentDescription="search icon"
-            />
+            android:contentDescription="Search Icon"
+            android:src="@drawable/icon_search" />
+
         <EditText
             android:id="@+id/searchNotes"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:inputType="text"
             android:background="@null"
-            android:textColor="@color/black"
+            android:hint="Search Notes"
             android:imeOptions="actionSearch"
             android:importantForAutofill="no"
-            android:hint="Search Notes"
-            />
+            android:inputType="text"
+            android:textColor="@color/black" />
     </LinearLayout>
+
+    <!-- Floating add note button -->
     <ImageButton
+        android:id="@+id/addNoteButton"
         android:layout_width="@dimen/_50sdp"
         android:layout_height="@dimen/_50sdp"
+        android:layout_marginBottom="@dimen/_12sdp"
         android:background="@drawable/create_new_note_button"
-        android:src="@drawable/icon_add"
+        android:contentDescription="Add New Note Button"
         android:padding="@dimen/_10sdp"
         android:scaleType="fitXY"
+        android:src="@drawable/icon_add"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginBottom="@dimen/_12sdp"
-        android:contentDescription="add new note button"
-        />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
