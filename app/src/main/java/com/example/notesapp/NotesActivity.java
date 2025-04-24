@@ -42,7 +42,7 @@ import java.lang.reflect.Type;
 import com.google.gson.reflect.TypeToken;
 
 
-public class MainActivity extends AppCompatActivity {
+public class NotesActivity extends AppCompatActivity {
 
     private ConstraintLayout mainLayout;
     private LinearLayout colorPickerLayout;
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_notes);
 
         SharedPreferences userPrefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
         userId = userPrefs.getString("userId", "null"); // Use a default or handle null if needed
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
         backBtn.setOnClickListener(view -> {
             saveNote();
-            startActivity(new Intent(MainActivity.this, Home.class));
+            startActivity(new Intent(NotesActivity.this, Home.class));
             finish();
         });
 
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
         ImageView saveBtn = findViewById(R.id.save_btn);
         saveBtn.setOnClickListener(view -> {
             saveNote();
-            Toast.makeText(MainActivity.this, "Note saved", Toast.LENGTH_SHORT).show();
+            Toast.makeText(NotesActivity.this, "Note saved", Toast.LENGTH_SHORT).show();
         });
 
         // Add edited textview click listener
@@ -171,13 +171,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setColor(int colorResId) {
-        currentBackgroundColor = ContextCompat.getColor(MainActivity.this, colorResId);
+        currentBackgroundColor = ContextCompat.getColor(NotesActivity.this, colorResId);
         mainLayout.setBackgroundColor(currentBackgroundColor);
         colorPickerLayout.setVisibility(View.GONE);
 
         Log.d("NotesApp", "Color set to: " + currentBackgroundColor);
 
-        int color = ContextCompat.getColor(MainActivity.this, colorResId);
+        int color = ContextCompat.getColor(NotesActivity.this, colorResId);
         currentBackgroundColor = color;
 
     }
@@ -215,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showBottomSheet() {
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(MainActivity.this);
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(NotesActivity.this);
         View bottomSheetView = LayoutInflater.from(getApplicationContext())
                 .inflate(R.layout.bottom_sheet_layout, null);
         bottomSheetDialog.setContentView(bottomSheetView);
@@ -344,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void navigateToHome() {
-        Intent intent = new Intent(MainActivity.this, Home.class);
+        Intent intent = new Intent(NotesActivity.this, Home.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();
@@ -388,14 +388,14 @@ public class MainActivity extends AppCompatActivity {
             if (isChecked) {
                 // Change the checkbox tint to black when checked
                 checkBox.setButtonTintList(android.content.res.ColorStateList.valueOf(
-                        ContextCompat.getColor(MainActivity.this, android.R.color.black)));
+                        ContextCompat.getColor(NotesActivity.this, android.R.color.black)));
 
                 // You can also cross out or style the text if needed
                 itemEditText.setPaintFlags(itemEditText.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
             } else {
                 // Change back to white when unchecked
                 checkBox.setButtonTintList(android.content.res.ColorStateList.valueOf(
-                        ContextCompat.getColor(MainActivity.this, android.R.color.white)));
+                        ContextCompat.getColor(NotesActivity.this, android.R.color.white)));
 
                 // Remove strikethrough if applied
                 itemEditText.setPaintFlags(itemEditText.getPaintFlags() & (~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG));
@@ -454,7 +454,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showImageOptions(ImageView imageView, Bitmap bitmap) {
-        BottomSheetDialog optionsDialog = new BottomSheetDialog(MainActivity.this);
+        BottomSheetDialog optionsDialog = new BottomSheetDialog(NotesActivity.this);
         View optionsView = LayoutInflater.from(getApplicationContext())
                 .inflate(R.layout.image_options_layout, null);
         optionsDialog.setContentView(optionsView);

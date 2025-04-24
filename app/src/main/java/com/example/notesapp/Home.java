@@ -92,7 +92,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         // Set up add note button
         findViewById(R.id.addNoteButton).setOnClickListener(view -> {
-            Intent intent = new Intent(Home.this, MainActivity.class);
+            Intent intent = new Intent(Home.this, NotesActivity.class);
             startActivity(intent);
         });
 

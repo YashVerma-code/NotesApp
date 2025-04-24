@@ -53,7 +53,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
         // Set up click listener for the note card
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(context, MainActivity.class);
+            Intent intent = new Intent(context, NotesActivity.class);
             intent.putExtra("note", note);
             context.startActivity(intent);
         });
