@@ -1,3 +1,4 @@
+// MainActivity.java
 package com.example.notesapp;
 
 import android.app.Dialog;
@@ -6,6 +7,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,10 +66,31 @@ public class MainActivity extends AppCompatActivity {
         mainLayout = findViewById(R.id.mainLayout);
         colorPickerLayout = findViewById(R.id.colorPickerLayout);
         colorIcon = findViewById(R.id.color_icon);
+        titleEditText = findViewById(R.id.titleEditText);
+        contentEditText = findViewById(R.id.contentEditText);
+
+        // Set default background color
+        currentBackgroundColor = ContextCompat.getColor(this, R.color.black);
+
+        // Check if we're editing an existing note
+        if (getIntent().hasExtra("note")) {
+            currentNote = (Note) getIntent().getSerializableExtra("note");
+            if (currentNote != null) {
+                titleEditText.setText(currentNote.getTitle());
+                contentEditText.setText(currentNote.getContent());
+                currentBackgroundColor = currentNote.getBackgroundColor();
+                mainLayout.setBackgroundColor(currentBackgroundColor);
+                Log.d("NotesApp", "Editing note with color: " + currentBackgroundColor);
+            }
+        }
+
         imageContent = findViewById(R.id.imageContent);
         imageContainer = findViewById(R.id.imageContainer);
         checkboxContainer = findViewById(R.id.checkbox_container);
         backBtn = findViewById(R.id.back_btn);
+
+        backBtn.setOnClickListener(view -> {
+            saveNote();
 
         titleEditText = findViewById(R.id.titleEditText);
         contentEditText = findViewById(R.id.contentEditText);
@@ -91,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        // Toggle color picker visibility
         plusIcon = findViewById(R.id.plus_icon);
         plusIcon.setOnClickListener(view -> showBottomSheet());
 
@@ -106,14 +130,41 @@ public class MainActivity extends AppCompatActivity {
                     colorPickerLayout.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
         });
 
+        // Add save button functionality
+        ImageView saveBtn = findViewById(R.id.save_btn);
+        saveBtn.setOnClickListener(view -> {
+            saveNote();
+            Toast.makeText(MainActivity.this, "Note saved", Toast.LENGTH_SHORT).show();
+        });
+
+        // Add edited textview click listener
+        findViewById(R.id.editedTextView).setOnClickListener(view -> {
+            saveNote();
+            navigateToHome();
+        });
+
         setupActivityResultLaunchers();
+
+        // Handle back press with the new API
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                saveNote();
+                finish();
+            }
+        });
     }
 
     private void setColor(int colorResId) {
-        mainLayout.setBackgroundColor(ContextCompat.getColor(MainActivity.this, colorResId));
+        currentBackgroundColor = ContextCompat.getColor(MainActivity.this, colorResId);
+        mainLayout.setBackgroundColor(currentBackgroundColor);
         colorPickerLayout.setVisibility(View.GONE);
+
+        Log.d("NotesApp", "Color set to: " + currentBackgroundColor);
+
         int color = ContextCompat.getColor(MainActivity.this, colorResId);
         currentBackgroundColor = color;
+
     }
 
     private void setupActivityResultLaunchers() {
@@ -186,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
         bottomSheetDialog.show();
     }
 
+
     private void addNewCheckboxItem() {
         // Inflate the checkbox item layout
         View checkboxItemView = getLayoutInflater().inflate(R.layout.list_item_checkbox, null);
@@ -214,12 +266,151 @@ public class MainActivity extends AppCompatActivity {
         // Add the remove button functionality
         removeButton.setOnClickListener(v -> {
             checkboxContainer.removeView(checkboxItemView);
+        });
+
+        // Add key listener to handle Enter key press
+        itemEditText.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                // Create a new checkbox item below the current one
+                int currentIndex = checkboxContainer.indexOfChild(checkboxItemView);
+                addNewCheckboxItemAt(currentIndex + 1);
+                return true;
+            }
+            return false;
             // Remove from checkboxItems list
             checkboxItems.removeIf(item -> item.getItemText().equals(itemEditText.getText().toString()));
         });
 
         // Add the view to the container
         checkboxContainer.addView(checkboxItemView);
+    }
+
+    private void saveNote() {
+        String title = titleEditText.getText().toString().trim();
+        String content = contentEditText.getText().toString().trim();
+
+        if (title.isEmpty() && content.isEmpty()) {
+            // Don't save empty notes
+            Log.d("NotesApp", "Not saving empty note");
+            return;
+        }
+
+        // Default title if empty
+        if (title.isEmpty()) {
+            title = "Untitled Note";
+        }
+
+        ArrayList<Note> notesList = loadNotes();
+
+        if (currentNote != null) {
+            // Update existing note
+            for (int i = 0; i < notesList.size(); i++) {
+                Note note = notesList.get(i);
+                if (note != null && note.getDateCreated() != null &&
+                        currentNote.getDateCreated() != null &&
+                        note.getDateCreated().equals(currentNote.getDateCreated())) {
+                    note.setTitle(title);
+                    note.setContent(content);
+                    note.setBackgroundColor(currentBackgroundColor);
+                    Log.d("NotesApp", "Updated existing note with color: " + currentBackgroundColor);
+                    break;
+                }
+            }
+        } else {
+            // Create new note
+            Note newNote = new Note(title, content, currentBackgroundColor);
+            notesList.add(0, newNote); // Add to beginning of list
+            Log.d("NotesApp", "Created new note with color: " + currentBackgroundColor);
+        }
+
+        // Save the updated notes list
+        saveNotes(notesList);
+        Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
+    }
+
+    private void navigateToHome() {
+        Intent intent = new Intent(MainActivity.this, Home.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        finish();
+    }
+
+    // Save notes to SharedPreferences
+    private void saveNotes(ArrayList<Note> notesList) {
+        SharedPreferences sharedPreferences = getSharedPreferences("notes_prefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(notesList);
+        editor.putString("notes", json);
+        editor.apply();
+        Log.d("NotesApp", "Saved " + notesList.size() + " notes to preferences");
+    }
+
+    // Load notes from SharedPreferences
+    private ArrayList<Note> loadNotes() {
+        SharedPreferences sharedPreferences = getSharedPreferences("notes_prefs", MODE_PRIVATE);
+        Gson gson = new Gson();
+        String json = sharedPreferences.getString("notes", null);
+        Type type = new TypeToken<ArrayList<Note>>() {}.getType();
+
+        if (json != null) {
+            return gson.fromJson(json, type);
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    private void addNewCheckboxItemAt(int position) {
+        // Inflate the checkbox item layout
+        View checkboxItemView = getLayoutInflater().inflate(R.layout.list_item_checkbox, null);
+        CheckBox checkBox = checkboxItemView.findViewById(R.id.checkbox);
+        EditText itemEditText = checkboxItemView.findViewById(R.id.item_edit_text);
+        ImageButton removeButton = checkboxItemView.findViewById(R.id.remove_button);
+
+        // Add listener to detect state changes
+        checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // If checkbox is checked
+            if (isChecked) {
+                // Change the checkbox tint to black when checked
+                checkBox.setButtonTintList(android.content.res.ColorStateList.valueOf(
+                        ContextCompat.getColor(MainActivity.this, android.R.color.black)));
+
+                // You can also cross out or style the text if needed
+                itemEditText.setPaintFlags(itemEditText.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+            } else {
+                // Change back to white when unchecked
+                checkBox.setButtonTintList(android.content.res.ColorStateList.valueOf(
+                        ContextCompat.getColor(MainActivity.this, android.R.color.white)));
+
+                // Remove strikethrough if applied
+                itemEditText.setPaintFlags(itemEditText.getPaintFlags() & (~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG));
+            }
+        });
+
+        // Set placeholder text and request focus
+        itemEditText.setHint("List item");
+        itemEditText.requestFocus();
+
+        // Add the remove button functionality
+        removeButton.setOnClickListener(v -> {
+            checkboxContainer.removeView(checkboxItemView);
+        });
+
+        // Add key listener to handle Enter key press
+        itemEditText.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                // Create a new checkbox item below the current one
+                int currentIndex = checkboxContainer.indexOfChild(checkboxItemView);
+                addNewCheckboxItemAt(currentIndex + 1);
+                return true;
+            }
+            return false;
+        });
+
+        // Add the view to the container at the specified position
+        checkboxContainer.addView(checkboxItemView, position);
+    }
+
     }
 
     private void addImageToNote(Bitmap bitmap) {
@@ -240,6 +431,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         imageContent.addView(imageView);
+
+        // Make sure the image area is visible (in case it was previously hidden)
+        imageContainer.setVisibility(View.VISIBLE);
         if (imageContent.getParent().getParent() instanceof View) {
             View scrollViewParent = (View) imageContent.getParent().getParent();
             scrollViewParent.setVisibility(View.VISIBLE);
@@ -264,8 +458,12 @@ public class MainActivity extends AppCompatActivity {
             imageContent.removeView(imageView);
             imageList.remove(bitmap);
             if (imageContent.getChildCount() == 0) {
+
+                imageContainer.setVisibility(View.GONE);
+
                 View scrollViewParent = (View) imageContent.getParent().getParent();
                 scrollViewParent.setVisibility(View.GONE);
+
             }
             optionsDialog.dismiss();
         });

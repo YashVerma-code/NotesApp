@@ -1,3 +1,4 @@
+// NotesAdapter.java
 package com.example.notesapp;
 
 import android.content.Context;
