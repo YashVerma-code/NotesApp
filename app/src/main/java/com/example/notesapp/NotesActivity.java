@@ -5,9 +5,11 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -66,10 +68,11 @@ public class NotesActivity extends AppCompatActivity {
     private LinearLayout imageContent;
     private ActivityResultLauncher<Intent> cameraLauncher;
     private ActivityResultLauncher<Intent> galleryLauncher;
+    private ActivityResultLauncher<Intent> drawingLauncher;
     private FrameLayout imageContainer;
     private LinearLayout checkboxContainer;
     private ImageView backBtn;
-    //    Title and content and color variable
+    // Title and content and color variable
     private EditText titleEditText;
     private EditText contentEditText;
     private int currentBackgroundColor;
@@ -84,9 +87,12 @@ public class NotesActivity extends AppCompatActivity {
 
     private String userId;
     private ImageButton cameraButton;
-    private ProgressBar  progressBar;
+    private ProgressBar progressBar;
     private ActivityResultLauncher<Intent> imagePickerLauncher;
     private Uri imageUri;
+
+    // Drawing feature constant
+    private static final int DRAWING_REQUEST_CODE = 101;
 
 
     @Override
@@ -96,7 +102,6 @@ public class NotesActivity extends AppCompatActivity {
 
         SharedPreferences userPrefs = getSharedPreferences("UserData", MODE_PRIVATE);
         userId = userPrefs.getString("username", "null"); // Use a default or handle null if needed
-
 
         mainLayout = findViewById(R.id.mainLayout);
         colorPickerLayout = findViewById(R.id.colorPickerLayout);
@@ -283,7 +288,6 @@ public class NotesActivity extends AppCompatActivity {
 
         int color = ContextCompat.getColor(NotesActivity.this, colorResId);
         currentBackgroundColor = color;
-
     }
 
     private void setupActivityResultLaunchers() {
@@ -316,6 +320,19 @@ public class NotesActivity extends AppCompatActivity {
                         }
                     }
                 });
+
+        // Register drawing activity launcher
+        drawingLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        byte[] drawingBytes = result.getData().getByteArrayExtra("drawing_image");
+                        if (drawingBytes != null) {
+                            Bitmap drawingBitmap = BitmapFactory.decodeByteArray(drawingBytes, 0, drawingBytes.length);
+                            addImageToNote(drawingBitmap);
+                        }
+                    }
+                });
     }
 
     private void showBottomSheet() {
@@ -344,7 +361,8 @@ public class NotesActivity extends AppCompatActivity {
         });
 
         drawing.setOnClickListener(view -> {
-            Toast.makeText(this, "Drawing feature coming soon!", Toast.LENGTH_SHORT).show();
+            Intent drawingIntent = new Intent(NotesActivity.this, DrawingActivity.class);
+            drawingLauncher.launch(drawingIntent);
             bottomSheetDialog.dismiss();
         });
 
@@ -355,7 +373,6 @@ public class NotesActivity extends AppCompatActivity {
 
         bottomSheetDialog.show();
     }
-
 
     private void addNewCheckboxItem() {
         // Inflate the checkbox item layout
@@ -437,7 +454,7 @@ public class NotesActivity extends AppCompatActivity {
             }
         } else {
             // Create new note
-            Note newNote = new Note(title, content, currentBackgroundColor,userId);
+            Note newNote = new Note(title, content, currentBackgroundColor, userId);
             notesList.add(0, newNote); // Add to beginning of list
             Log.d("NotesApp", "Created new note with color: " + currentBackgroundColor);
         }
@@ -575,12 +592,9 @@ public class NotesActivity extends AppCompatActivity {
             imageContent.removeView(imageView);
             imageList.remove(bitmap);
             if (imageContent.getChildCount() == 0) {
-
                 imageContainer.setVisibility(View.GONE);
-
                 View scrollViewParent = (View) imageContent.getParent().getParent();
                 scrollViewParent.setVisibility(View.GONE);
-
             }
             optionsDialog.dismiss();
         });

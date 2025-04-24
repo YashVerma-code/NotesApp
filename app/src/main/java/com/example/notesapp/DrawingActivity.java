@@ -1,0 +1,118 @@
+package com.example.notesapp;
+
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.Stack;
+
+public class DrawingActivity extends AppCompatActivity {
+
+    private DrawingView drawingView;
+    private ImageButton pencilBtn, eraserBtn, undoBtn, redoBtn, clearBtn, saveBtn, cancelBtn;
+    private ImageButton colorBlackBtn, colorRedBtn, colorBlueBtn, colorGreenBtn, colorYellowBtn;
+    private SeekBar brushSizeSeekBar;
+    private LinearLayout colorPalette;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_drawing);
+
+        // Initialize drawing view
+        drawingView = findViewById(R.id.drawing_view);
+
+        // Initialize all buttons
+        pencilBtn = findViewById(R.id.pencil_btn);
+        eraserBtn = findViewById(R.id.eraser_btn);
+        undoBtn = findViewById(R.id.undo_btn);
+        redoBtn = findViewById(R.id.redo_btn);
+        clearBtn = findViewById(R.id.clear_btn);
+        saveBtn = findViewById(R.id.save_btn);
+        cancelBtn = findViewById(R.id.cance);
+
+        // Initialize color buttons
+        colorBlackBtn = findViewById(R.id.color_black);
+        colorRedBtn = findViewById(R.id.color_red);
+        colorBlueBtn = findViewById(R.id.color_blue);
+        colorGreenBtn = findViewById(R.id.color_green);
+        colorYellowBtn = findViewById(R.id.color_yellow);
+
+        // Initialize brush size seekbar
+        brushSizeSeekBar = findViewById(R.id.brush_size_seekbar);
+        colorPalette = findViewById(R.id.color_palette);
+
+        // Set default color to black
+        drawingView.setColor(Color.BLACK);
+
+        // Set onClick listeners for buttons
+        pencilBtn.setOnClickListener(v -> {
+            drawingView.setTool(DrawingView.Tool.PENCIL);
+            pencilBtn.setBackgroundColor(Color.LTGRAY);
+            eraserBtn.setBackgroundColor(Color.TRANSPARENT);
+            colorPalette.setVisibility(View.VISIBLE);
+        });
+
+        eraserBtn.setOnClickListener(v -> {
+            drawingView.setTool(DrawingView.Tool.ERASER);
+            eraserBtn.setBackgroundColor(Color.LTGRAY);
+            pencilBtn.setBackgroundColor(Color.TRANSPARENT);
+            colorPalette.setVisibility(View.GONE);
+        });
+
+        undoBtn.setOnClickListener(v -> drawingView.undo());
+        redoBtn.setOnClickListener(v -> drawingView.redo());
+        clearBtn.setOnClickListener(v -> drawingView.clearCanvas());
+
+        saveBtn.setOnClickListener(v -> {
+            Bitmap bitmap = drawingView.getBitmap();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("drawing_image", byteArray);
+            setResult(RESULT_OK, resultIntent);
+            finish();
+        });
+
+        cancelBtn.setOnClickListener(v -> {
+            setResult(RESULT_CANCELED);
+            finish();
+        });
+
+        // Color buttons
+        colorBlackBtn.setOnClickListener(v -> drawingView.setColor(Color.BLACK));
+        colorRedBtn.setOnClickListener(v -> drawingView.setColor(Color.RED));
+        colorBlueBtn.setOnClickListener(v -> drawingView.setColor(Color.BLUE));
+        colorGreenBtn.setOnClickListener(v -> drawingView.setColor(Color.GREEN));
+        colorYellowBtn.setOnClickListener(v -> drawingView.setColor(Color.YELLOW));
+
+        // Brush size seekbar
+        brushSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                drawingView.setBrushSize(progress + 5); // Min size of 5
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+    }
+}

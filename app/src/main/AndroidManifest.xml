@@ -32,12 +32,14 @@
         <activity
             android:name=".NotesActivity"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
+        <!-- Add this inside the <application> tag -->
+        <activity
+            android:name=".DrawingActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+             />
+        <!-- Replace YourAppTheme with your actual app theme -->
     </application>
 
 </manifest>
