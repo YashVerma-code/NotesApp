@@ -1,4 +1,3 @@
-// NotesAdapter.java
 package com.example.notesapp;
 
 import android.content.Context;
@@ -21,10 +20,19 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     private ArrayList<Note> notesList;
     private Context context;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    private OnNoteDeleteListener onNoteDeleteListener;
+
+    public interface OnNoteDeleteListener {
+        void onDeleteNote(Note note);
+    }
 
     public NotesAdapter(Context context, ArrayList<Note> notesList) {
         this.context = context;
         this.notesList = notesList;
+    }
+
+    public void setOnNoteDeleteListener(OnNoteDeleteListener listener) {
+        this.onNoteDeleteListener = listener;
     }
 
     @NonNull
@@ -48,6 +56,15 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             Intent intent = new Intent(context, MainActivity.class);
             intent.putExtra("note", note);
             context.startActivity(intent);
+        });
+
+        // Set up long-press listener for deletion
+        holder.itemView.setOnLongClickListener(v -> {
+            if (onNoteDeleteListener != null) {
+                onNoteDeleteListener.onDeleteNote(note);
+                return true;
+            }
+            return false;
         });
     }
 
