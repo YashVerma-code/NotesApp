@@ -29,17 +29,6 @@
             android:layout_marginStart="16dp" />
 
         <ImageView
-            android:id="@+id/image_scanner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="260dp"
-            android:src="@drawable/ic_scanner"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/back_btn"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
-
-        <ImageView
             android:id="@+id/delete_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -203,7 +192,19 @@
             android:layout_margin="8dp"
             android:background="@drawable/color_circle_green" />
     </LinearLayout>
-
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:visibility="gone"
+        android:indeterminate="true"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:backgroundTint="@color/white"
+        />
     <!-- Bottom Bar -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottomBar"
@@ -252,6 +253,19 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
             app:srcCompat="@drawable/color_icon" />
+        <ImageButton
+            android:id="@+id/cameraButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Scan Notes"
+            android:src="@drawable/ic_camera"
+            app:tint="@color/white"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/color_icon"
+            app:layout_constraintEnd_toStartOf="@+id/editedTextView"
+            />
 
         <ImageView
             android:id="@+id/plus_icon"

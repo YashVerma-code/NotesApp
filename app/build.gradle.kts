@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.appcompat)
     // Remove this line since you're already explicitly defining material above
     // implementation(libs.material)
+    implementation(libs.okhttp)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.sdp)

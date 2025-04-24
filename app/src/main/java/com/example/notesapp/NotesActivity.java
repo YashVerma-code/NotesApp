@@ -19,6 +19,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,11 +36,25 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.gson.Gson;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import java.lang.reflect.Type;
 import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 
 public class NotesActivity extends AppCompatActivity {
@@ -68,7 +83,10 @@ public class NotesActivity extends AppCompatActivity {
     private Note currentNote;
 
     private String userId;
-
+    private ImageButton cameraButton;
+    private ProgressBar  progressBar;
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
+    private Uri imageUri;
 
 
     @Override
@@ -76,13 +94,15 @@ public class NotesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notes);
 
-        SharedPreferences userPrefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
-        userId = userPrefs.getString("userId", "null"); // Use a default or handle null if needed
+        SharedPreferences userPrefs = getSharedPreferences("UserData", MODE_PRIVATE);
+        userId = userPrefs.getString("username", "null"); // Use a default or handle null if needed
 
 
         mainLayout = findViewById(R.id.mainLayout);
         colorPickerLayout = findViewById(R.id.colorPickerLayout);
         colorIcon = findViewById(R.id.color_icon);
+        cameraButton = findViewById(R.id.cameraButton);
+        progressBar = findViewById(R.id.progressBar);
         titleEditText = findViewById(R.id.titleEditText);
         contentEditText = findViewById(R.id.contentEditText);
 
@@ -129,6 +149,22 @@ public class NotesActivity extends AppCompatActivity {
             return insets;
         });
 
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Uri selectedImage = result.getData().getData();
+                        extractTextFromImage(selectedImage);
+                    }
+                }
+        );
+
+        cameraButton.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            imagePickerLauncher.launch(intent);
+        });
+
         // Toggle color picker visibility
         plusIcon = findViewById(R.id.plus_icon);
         plusIcon.setOnClickListener(view -> showBottomSheet());
@@ -168,6 +204,74 @@ public class NotesActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    private byte[] getBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[16384];
+        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+        return buffer.toByteArray();
+    }
+
+    private void extractTextFromImage(Uri imageUri) {
+        showProgressBar(true); // Show loading spinner
+
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+            byte[] imageBytes = getBytes(inputStream);
+
+            OkHttpClient client = new OkHttpClient();
+
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("image", "image.jpg",
+                            RequestBody.create(MediaType.parse("image/jpeg"), imageBytes))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("https://d818-2402-3a80-752-9077-78f7-2826-5943-508e.ngrok-free.app/extract-text")
+                    .post(requestBody)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    runOnUiThread(() -> {
+                        showProgressBar(false);
+                        Toast.makeText(NotesActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    String responseText = response.body().string();
+                    runOnUiThread(() -> {
+                        showProgressBar(false);
+                        try {
+                            JSONObject jsonObject = new JSONObject(responseText);
+                            String extractedText = jsonObject.getString("text");
+                            String existingText = contentEditText.getText().toString();
+                            contentEditText.setText(existingText + "\n" + extractedText);
+                        } catch (JSONException e) {
+                            Toast.makeText(NotesActivity.this, "Invalid response format", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+
+        } catch (Exception e) {
+            showProgressBar(false);
+            e.printStackTrace();
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showProgressBar(boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        contentEditText.setEnabled(!show);
     }
 
     private void setColor(int colorResId) {

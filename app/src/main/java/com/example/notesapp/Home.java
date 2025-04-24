@@ -8,7 +8,11 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -39,6 +43,11 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     private ArrayList<Note> notesList;
     private ArrayList<Note> filteredNotesList;
     private EditText searchEditText;
+
+    private TextView welcomeText;
+    private Button logoutButton;
+    private ImageButton addNoteButton;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +112,28 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             return insets;
         });
 
+        logoutButton = findViewById(R.id.logoutButton);
+        addNoteButton = findViewById(R.id.addNoteButton);
+
+        sharedPreferences = getSharedPreferences("NotesAppPrefs", MODE_PRIVATE);
+        String username = sharedPreferences.getString("username", "User");
+
+        addNoteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Home.this, NotesActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        // Set up logout button click listener
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                logoutUser();
+            }
+        });
+
         // Handle back press with the new API
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -115,7 +146,19 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             }
         });
     }
+    private void logoutUser() {
+        // Clear login state
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("isLoggedIn", false);
+        editor.remove("username");
+        editor.apply();
 
+        // Navigate back to login screen
+        Intent intent = new Intent(Home.this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
     @Override
     protected void onResume() {
         super.onResume();
