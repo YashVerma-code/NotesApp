@@ -1,11 +1,14 @@
-// Home.java
 package com.example.notesapp;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -26,6 +29,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -33,6 +37,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     private RecyclerView notesRecyclerView;
     private NotesAdapter notesAdapter;
     private ArrayList<Note> notesList;
+    private ArrayList<Note> filteredNotesList;
+    private EditText searchEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,8 +66,29 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         // Initialize notes list and adapter
         notesList = loadNotes();
-        notesAdapter = new NotesAdapter(this, notesList);
+        filteredNotesList = new ArrayList<>(notesList);
+        notesAdapter = new NotesAdapter(this, filteredNotesList);
         notesRecyclerView.setAdapter(notesAdapter);
+
+        // Set up delete listener for adapter
+        notesAdapter.setOnNoteDeleteListener(note -> {
+            confirmDeleteNote(note);
+        });
+
+        // Set up search functionality
+        searchEditText = findViewById(R.id.searchNotes);
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterNotes(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
         // Set up add note button
         findViewById(R.id.addNoteButton).setOnClickListener(view -> {
@@ -94,9 +121,54 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         super.onResume();
         // Reload notes when returning to this activity
         notesList = loadNotes();
-        if (notesAdapter != null) {
-            notesAdapter.updateNotes(notesList);
+        filterNotes(searchEditText.getText().toString());
+    }
+
+    private void filterNotes(String query) {
+        if (query.isEmpty()) {
+            filteredNotesList = new ArrayList<>(notesList);
+        } else {
+            String searchText = query.toLowerCase();
+            filteredNotesList = notesList.stream()
+                    .filter(note -> note.getTitle().toLowerCase().contains(searchText) ||
+                            note.getContent().toLowerCase().contains(searchText))
+                    .collect(Collectors.toCollection(ArrayList::new));
         }
+        notesAdapter.updateNotes(filteredNotesList);
+    }
+
+    private void confirmDeleteNote(Note note) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Delete Note");
+        builder.setMessage("Are you sure you want to delete this note?");
+        builder.setPositiveButton("Yes", (dialog, which) -> {
+            deleteNote(note);
+        });
+        builder.setNegativeButton("No", (dialog, which) -> {
+            dialog.dismiss();
+        });
+        builder.show();
+    }
+
+    private void deleteNote(Note note) {
+        // Find and remove the note from the original list
+        for (int i = 0; i < notesList.size(); i++) {
+            Note currentNote = notesList.get(i);
+            if (currentNote.getDateCreated() != null &&
+                    note.getDateCreated() != null &&
+                    currentNote.getDateCreated().equals(note.getDateCreated())) {
+                notesList.remove(i);
+                break;
+            }
+        }
+
+        // Save the updated notes list
+        saveNotes(notesList);
+
+        // Update the filtered list as well
+        filterNotes(searchEditText.getText().toString());
+
+        Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -148,4 +220,17 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             return new ArrayList<>();
         }
     }
+
+    // Save notes to SharedPreferences
+    private void saveNotes(ArrayList<Note> notesList) {
+        SharedPreferences sharedPreferences = getSharedPreferences("notes_prefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(notesList);
+        editor.putString("notes", json);
+        editor.apply();
+        Log.d("NotesApp", "Saved " + notesList.size() + " notes to preferences");
+    }
+
+
 }
