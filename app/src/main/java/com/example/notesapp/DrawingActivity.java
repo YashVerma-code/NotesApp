@@ -2,6 +2,7 @@ package com.example.notesapp;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -34,6 +35,28 @@ public class DrawingActivity extends AppCompatActivity {
 
         // Initialize drawing view
         drawingView = findViewById(R.id.drawing_view);
+
+        // Get intent data
+        Intent intent = getIntent();
+        boolean isDrawing = intent.getBooleanExtra("isDrawing", false);
+        String description = intent.getStringExtra("description");
+
+        // Check if we have bitmap bytes (better for passing through intent)
+        byte[] drawingBytes = intent.getByteArrayExtra("drawing_bytes");
+        if (isDrawing && drawingBytes != null) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(drawingBytes, 0, drawingBytes.length);
+            Drawing drawing = new Drawing(bitmap, description);
+            drawingView.setDrawing(drawing);
+        }
+        // If no bytes, try to get bitmap directly (older method)
+        else if (isDrawing) {
+            Bitmap bitmap = intent.getParcelableExtra("bitmap");
+            if (bitmap != null) {
+                Drawing drawing = new Drawing(bitmap, description);
+                drawingView.setDrawing(drawing);
+            }
+        }
+
 
         // Initialize all buttons
         pencilBtn = findViewById(R.id.pencil_btn);
@@ -78,16 +101,18 @@ public class DrawingActivity extends AppCompatActivity {
         clearBtn.setOnClickListener(v -> drawingView.clearCanvas());
 
         saveBtn.setOnClickListener(v -> {
-            Bitmap bitmap = drawingView.getBitmap();
+            Bitmap newBitmap = drawingView.getBitmap();
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            newBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
             byte[] byteArray = stream.toByteArray();
 
             Intent resultIntent = new Intent();
             resultIntent.putExtra("drawing_image", byteArray);
+            resultIntent.putExtra("description", description); // Return the description as well
             setResult(RESULT_OK, resultIntent);
             finish();
         });
+
 
 
         // Color buttons

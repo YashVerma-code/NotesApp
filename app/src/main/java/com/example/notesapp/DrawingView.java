@@ -36,10 +36,24 @@ public class DrawingView extends View {
     private Stack<Path> redoPaths = new Stack<>();
     private Stack<Paint> redoPaints = new Stack<>();
 
+    private Drawing currentDrawing;
+
     public DrawingView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         setupDrawing();
     }
+
+    public DrawingView(Context context) {
+        super(context);
+    }
+
+
+    public void setDrawing(Drawing drawing) {
+        // Set the drawing (Bitmap and description)
+        this.currentDrawing = drawing;
+        invalidate();  // Redraw the canvas
+    }
+
 
     private void setupDrawing() {
         path = new Path();
@@ -66,8 +80,37 @@ public class DrawingView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawBitmap(canvasBitmap, 0, 0, canvasPaint);
+        // First draw the base white canvas
+        canvas.drawBitmap(canvasBitmap, 0, 0, null);
+
+        // Draw the current path the user is creating
         canvas.drawPath(path, drawPaint);
+
+        // If there is a current drawing loaded from before, overlay it on the canvas
+        if (currentDrawing != null) {
+            // Copy the drawing's bitmap to our canvas
+            Bitmap drawingBitmap = currentDrawing.getBitmap();
+
+            // Scale the bitmap if needed to fit the canvas
+            if (drawingBitmap.getWidth() != getWidth() || drawingBitmap.getHeight() != getHeight()) {
+                drawingBitmap = Bitmap.createScaledBitmap(
+                        drawingBitmap,
+                        getWidth(),
+                        getHeight(),
+                        true
+                );
+            }
+
+            // Draw the bitmap onto our canvas
+            drawCanvas.drawBitmap(drawingBitmap, 0, 0, null);
+
+            // Clear the currentDrawing reference so we don't keep redrawing it
+            // It's now part of our canvas
+            currentDrawing = null;
+
+            // Invalidate to show the changes
+            invalidate();
+        }
     }
 
     @Override
