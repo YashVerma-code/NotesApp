@@ -3,6 +3,7 @@ package com.example.notesapp;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,9 +33,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
+
+import java.lang.reflect.Type;
+import com.google.gson.reflect.TypeToken;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -57,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
 
     // List to store checkbox data (text and checked status)
     private ArrayList<ChecklistItem> checkboxItems = new ArrayList<>();
+
+    private Note currentNote;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,13 +99,11 @@ public class MainActivity extends AppCompatActivity {
         checkboxContainer = findViewById(R.id.checkbox_container);
         backBtn = findViewById(R.id.back_btn);
 
-        backBtn.setOnClickListener(view -> {
-            saveNote();
-
         titleEditText = findViewById(R.id.titleEditText);
         contentEditText = findViewById(R.id.contentEditText);
 
         backBtn.setOnClickListener(view -> {
+            saveNote();
             startActivity(new Intent(MainActivity.this, Home.class));
             finish();
         });
@@ -276,9 +284,9 @@ public class MainActivity extends AppCompatActivity {
                 addNewCheckboxItemAt(currentIndex + 1);
                 return true;
             }
-            return false;
             // Remove from checkboxItems list
             checkboxItems.removeIf(item -> item.getItemText().equals(itemEditText.getText().toString()));
+            return false;
         });
 
         // Add the view to the container
@@ -409,8 +417,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Add the view to the container at the specified position
         checkboxContainer.addView(checkboxItemView, position);
-    }
-
     }
 
     private void addImageToNote(Bitmap bitmap) {
