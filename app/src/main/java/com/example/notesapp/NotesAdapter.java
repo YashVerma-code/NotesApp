@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Locale;
 
 public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHolder> {
@@ -58,14 +59,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             context.startActivity(intent);
         });
 
-        // Set up long-press listener for deletion
-        holder.itemView.setOnLongClickListener(v -> {
-            if (onNoteDeleteListener != null) {
-                onNoteDeleteListener.onDeleteNote(note);
-                return true;
-            }
-            return false;
-        });
+        // Remove the long press listener - we'll use ItemTouchHelper for drag functionality instead
     }
 
     @Override
@@ -76,6 +70,36 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     public void updateNotes(ArrayList<Note> newNotes) {
         this.notesList = newNotes;
         notifyDataSetChanged();
+    }
+
+    // Method to get note at specific position
+    public Note getNoteAt(int position) {
+        if (position >= 0 && position < notesList.size()) {
+            return notesList.get(position);
+        }
+        return null;
+    }
+
+    // Method to move a note within the list
+    public void moveNote(int fromPosition, int toPosition) {
+        if (fromPosition < toPosition) {
+            for (int i = fromPosition; i < toPosition; i++) {
+                Collections.swap(notesList, i, i + 1);
+            }
+        } else {
+            for (int i = fromPosition; i > toPosition; i--) {
+                Collections.swap(notesList, i, i - 1);
+            }
+        }
+        notifyItemMoved(fromPosition, toPosition);
+    }
+
+    // Method to remove a note
+    public void removeNote(int position) {
+        if (position >= 0 && position < notesList.size()) {
+            notesList.remove(position);
+            notifyItemRemoved(position);
+        }
     }
 
     static class NoteViewHolder extends RecyclerView.ViewHolder {

@@ -1,11 +1,12 @@
 package com.example.notesapp;
 
-import android.app.AlertDialog;
 import android.content.Intent;
+import java.util.Collections;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,6 +25,7 @@ import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
@@ -35,7 +37,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, NoteItemTouchHelper.OnNoteActionListener {
 
     private DrawerLayout drawerLayout;
     private RecyclerView notesRecyclerView;
@@ -44,7 +46,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     private ArrayList<Note> filteredNotesList;
     private EditText searchEditText;
     private String currentUserId;
-
+    private ItemTouchHelper itemTouchHelper;
 
     private TextView welcomeText;
     private Button logoutButton;
@@ -91,11 +93,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         notesAdapter = new NotesAdapter(this, filteredNotesList);
         notesRecyclerView.setAdapter(notesAdapter);
 
-        // Set up delete listener for adapter
-        notesAdapter.setOnNoteDeleteListener(note -> {
-            confirmDeleteNote(note);
-            confirmDeleteNote(note);
-        });
+        // Set up ItemTouchHelper for drag-and-drop functionality
+        setupDragAndDrop();
 
         // Set up search functionality
         searchEditText = findViewById(R.id.searchNotes);
@@ -167,6 +166,67 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             }
         });
     }
+
+    private void setupDragAndDrop() {
+        // Calculate the delete threshold based on screen height (20% of screen height)
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int deleteThreshold = displayMetrics.heightPixels / 5;
+
+        // Create and attach the ItemTouchHelper
+        NoteItemTouchHelper callback = new NoteItemTouchHelper(notesAdapter, this, deleteThreshold);
+        itemTouchHelper = new ItemTouchHelper(callback);
+        itemTouchHelper.attachToRecyclerView(notesRecyclerView);
+    }
+
+    // Implementation of NoteItemTouchHelper.OnNoteActionListener
+    @Override
+    public void onNoteDeleted(Note note) {
+        // Delete note directly without confirmation dialog
+        deleteNote(note);
+    }
+
+    @Override
+    public void onNoteMoved(int fromPosition, int toPosition) {
+        // Update the filtered list first
+        notesAdapter.moveNote(fromPosition, toPosition);
+
+        // Find the corresponding notes in the original list
+        Note noteFrom = filteredNotesList.get(fromPosition);
+        Note noteTo = filteredNotesList.get(toPosition);
+
+        int fromOriginalPos = -1;
+        int toOriginalPos = -1;
+
+        for (int i = 0; i < notesList.size(); i++) {
+            Note currentNote = notesList.get(i);
+            if (currentNote.getDateCreated() != null) {
+                if (currentNote.getDateCreated().equals(noteFrom.getDateCreated())) {
+                    fromOriginalPos = i;
+                }
+                if (currentNote.getDateCreated().equals(noteTo.getDateCreated())) {
+                    toOriginalPos = i;
+                }
+            }
+        }
+
+        // Update the original list if both positions are found
+        if (fromOriginalPos != -1 && toOriginalPos != -1) {
+            if (fromOriginalPos < toOriginalPos) {
+                for (int i = fromOriginalPos; i < toOriginalPos; i++) {
+                    Collections.swap(notesList, i, i + 1);
+                }
+            } else {
+                for (int i = fromOriginalPos; i > toOriginalPos; i--) {
+                    Collections.swap(notesList, i, i - 1);
+                }
+            }
+
+            // Save the updated notes list
+            saveNotes(notesList);
+        }
+    }
+
     private void logoutUser() {
         // Clear login state
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -181,6 +241,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         startActivity(intent);
         finish();
     }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -202,20 +263,21 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         notesAdapter.updateNotes(filteredNotesList);
     }
 
-    private void confirmDeleteNote(Note note) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Delete Note");
-        builder.setMessage("Are you sure you want to delete this note?");
-        builder.setPositiveButton("Yes", (dialog, which) -> {
-            deleteNote(note);
-        });
-        builder.setNegativeButton("No", (dialog, which) -> {
-            dialog.dismiss();
-        });
-        builder.show();
-    }
-
     private void deleteNote(Note note) {
+        // Find the note in the filtered list
+        int filteredPosition = -1;
+        for (int i = 0; i < filteredNotesList.size(); i++) {
+            if (filteredNotesList.get(i).getDateCreated().equals(note.getDateCreated())) {
+                filteredPosition = i;
+                break;
+            }
+        }
+
+        if (filteredPosition != -1) {
+            filteredNotesList.remove(filteredPosition);
+            notesAdapter.notifyItemRemoved(filteredPosition);
+        }
+
         // Find and remove the note from the original list
         for (int i = 0; i < notesList.size(); i++) {
             Note currentNote = notesList.get(i);
@@ -231,10 +293,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         // Save the updated notes list
         saveNotes(notesList);
-
-        // Update the filtered list as well
-        filterNotes(searchEditText.getText().toString());
-
         Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
     }
 
@@ -310,6 +368,4 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         editor.apply();
         Log.d("NotesApp", "Saved " + notesList.size() + " notes to preferences");
     }
-
-
 }
