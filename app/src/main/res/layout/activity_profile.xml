@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    tools:context=".ProfileActivity">
+
+    <!-- Top App Bar with back button -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:fitsSystemWindows="true"
+        app:elevation="0dp">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:contentInsetStart="0dp">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/back_btn"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="12dp"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@android:color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="Profile"
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/back_btn"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/save_profile_btn"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="12dp"
+                    android:src="@android:drawable/ic_menu_save"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@android:color/white" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- Profile Header Section -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/profile_header_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                app:cardBackgroundColor="#1A1A1A"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/profile_image"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:layout_marginTop="12dp"
+                        android:background="#333333"
+                        android:scaleType="centerCrop"
+                        android:src="@android:drawable/ic_menu_camera"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:shapeAppearanceOverlay="@style/CircleImageView"
+                        app:tint="@android:color/white" />
+
+                    <ImageView
+                        android:id="@+id/edit_profile_image"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@android:color/black"
+                        android:padding="6dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        app:layout_constraintBottom_toBottomOf="@id/profile_image"
+                        app:layout_constraintEnd_toEndOf="@id/profile_image"
+                        app:tint="@android:color/white" />
+
+                    <TextView
+                        android:id="@+id/profile_username"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Username"
+                        android:textColor="@android:color/white"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/profile_image" />
+
+                    <TextView
+                        android:id="@+id/profile_email"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="user@example.com"
+                        android:textColor="#AFAFAF"
+                        android:textSize="14sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/profile_username" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/edit_profile_btn"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Edit Profile"
+                        android:textColor="@android:color/white"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/profile_email"
+                        app:strokeColor="@android:color/white" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Stats Section -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/stats_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                app:cardBackgroundColor="#1A1A1A"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/profile_header_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Your Notes Stats"
+                        android:textColor="@android:color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/notes_count"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="@android:color/white"
+                                android:textSize="28sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Notes"
+                                android:textColor="#AFAFAF"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <View
+                        android:id="@+id/notes_usage_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="20dp"
+                        android:background="@drawable/progress_bar_bg" />
+
+                    <TextView
+                        android:id="@+id/storage_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="8dp"
+                        android:text="Notes: 1.2 MB / 100 MB"
+                        android:textColor="#AFAFAF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Preferences Section -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/preferences_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                app:cardBackgroundColor="#1A1A1A"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/stats_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Preferences"
+                        android:textColor="@android:color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <!-- Default Note Color -->
+                    <LinearLayout
+                        android:id="@+id/default_note_color_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Default Note Color"
+                            android:textColor="@android:color/white"
+                            android:textSize="16sp" />
+
+                        <View
+                            android:id="@+id/default_color_preview"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:background="@android:color/black" />
+                    </LinearLayout>
+
+                    <!-- Auto-save Toggle -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Auto-save Notes"
+                            android:textColor="@android:color/white"
+                            android:textSize="16sp" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/auto_save_switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true" />
+                    </LinearLayout>
+
+                    <!-- Dark Mode Toggle -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Dark Mode"
+                            android:textColor="@android:color/white"
+                            android:textSize="16sp" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/dark_mode_switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Account Section -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/account_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                app:cardBackgroundColor="#1A1A1A"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/preferences_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Account"
+                        android:textColor="@android:color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <!-- Change Password -->
+                    <TextView
+                        android:id="@+id/change_password_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp"
+                        android:text="Change Password"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp" />
+
+                    <!-- Export Notes -->
+                    <TextView
+                        android:id="@+id/export_notes_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp"
+                        android:text="Export All Notes"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp" />
+
+                    <!-- Delete Account -->
+                    <TextView
+                        android:id="@+id/delete_account_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp"
+                        android:text="Delete Account"
+                        android:textColor="#FF5252"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Version Info -->
+            <TextView
+                android:id="@+id/app_version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp"
+                android:text="Notes App v1.0.0"
+                android:textColor="#8F8F8F"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/account_card" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

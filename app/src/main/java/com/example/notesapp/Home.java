@@ -128,6 +128,16 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         logoutButton = findViewById(R.id.logoutButton);
         addNoteButton = findViewById(R.id.addNoteButton);
+        Button profileButton = findViewById(R.id.profileButton); // Ensure this ID exists in your layout
+        profileButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Home.this, ProfileActivity.class);
+                intent.putExtra("userId", currentUserId); // Optional: Pass user ID if needed
+                startActivity(intent);
+            }
+        });
+
 
         addNoteButton.setOnClickListener(new View.OnClickListener() {
             @Override
