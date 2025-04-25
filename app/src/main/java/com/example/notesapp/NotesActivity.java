@@ -108,20 +108,26 @@ public class NotesActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private ActivityResultLauncher<Intent> imagePickerLauncher;
     private Uri imageUri;
-
     private DrawingView canvasView;
 
     // Drawing feature constant
     private static final int DRAWING_REQUEST_CODE = 101;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notes);
 
-        SharedPreferences userPrefs = getSharedPreferences("UserData", MODE_PRIVATE);
-        userId = userPrefs.getString("username", "null"); // Use a default or handle null if needed
+        userId = getIntent().getStringExtra("userId");
+        if (userId == null) {
+            SharedPreferences sharedPreferences = getSharedPreferences("NotesAppPrefs", MODE_PRIVATE);
+            userId = sharedPreferences.getString("userId", null);
+            if (userId == null) {
+                Toast.makeText(this, "User not found. Please login again.", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+        }
 
         mainLayout = findViewById(R.id.mainLayout);
         colorPickerLayout = findViewById(R.id.colorPickerLayout);

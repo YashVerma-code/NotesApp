@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -12,6 +13,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -76,22 +81,42 @@ public class MainActivity extends AppCompatActivity {
 
         // Check if user exists in SharedPreferences
         SharedPreferences userPrefs = getSharedPreferences("UserData", MODE_PRIVATE);
-        String savedPassword = userPrefs.getString(username, null);
+        String savedPassword = userPrefs.getString(username + "_password", null);
+        String userId = userPrefs.getString(username + "_userId", null);
 
-        if (savedPassword != null && savedPassword.equals(password)) {
-            // Login successful, save login state
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("isLoggedIn", true);
-            editor.putString("username", username);
-            editor.apply();
+        if (savedPassword != null && userId != null) {
+            // Hash the input password for comparison
+            String hashedPassword = hashPassword(password);
 
-            // Navigate to Home
-            Intent intent = new Intent(MainActivity.this, Home.class);
-            startActivity(intent);
-            finish();
+            if (savedPassword.equals(hashedPassword)) {
+                // Login successful, save login state
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("isLoggedIn", true);
+                editor.putString("username", username);
+                editor.putString("userId", userId);
+                editor.apply();
+
+                // Navigate to Home
+                Intent intent = new Intent(MainActivity.this, Home.class);
+                startActivity(intent);
+                finish();
+            } else {
+                // Login failed
+                Toast.makeText(MainActivity.this, "Invalid username or password", Toast.LENGTH_SHORT).show();
+            }
         } else {
             // Login failed
             Toast.makeText(MainActivity.this, "Invalid username or password", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encodedHash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+            return Base64.encodeToString(encodedHash, Base64.NO_WRAP);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

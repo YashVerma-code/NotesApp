@@ -43,6 +43,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     private ArrayList<Note> notesList;
     private ArrayList<Note> filteredNotesList;
     private EditText searchEditText;
+    private String currentUserId;
+
 
     private TextView welcomeText;
     private Button logoutButton;
@@ -54,6 +56,16 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_home);
+
+        sharedPreferences = getSharedPreferences("NotesAppPrefs", MODE_PRIVATE);
+        String username = sharedPreferences.getString("username", "User");
+        currentUserId = sharedPreferences.getString("userId", null);
+
+        if (currentUserId == null) {
+            Toast.makeText(this, "User not found. Please login again.", Toast.LENGTH_SHORT).show();
+            logoutUser();
+            return;
+        }
 
         // Initialize drawer layout
         drawerLayout = findViewById(R.id.drawer_layout);
@@ -103,6 +115,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         // Set up add note button
         findViewById(R.id.addNoteButton).setOnClickListener(view -> {
             Intent intent = new Intent(Home.this, NotesActivity.class);
+            intent.putExtra("userId", currentUserId);
             startActivity(intent);
         });
 
@@ -115,9 +128,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         logoutButton = findViewById(R.id.logoutButton);
         addNoteButton = findViewById(R.id.addNoteButton);
-
-        sharedPreferences = getSharedPreferences("NotesAppPrefs", MODE_PRIVATE);
-        String username = sharedPreferences.getString("username", "User");
 
         addNoteButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -152,6 +162,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("isLoggedIn", false);
         editor.remove("username");
+        editor.remove("userId");
         editor.apply();
 
         // Navigate back to login screen
@@ -200,7 +211,9 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             Note currentNote = notesList.get(i);
             if (currentNote.getDateCreated() != null &&
                     note.getDateCreated() != null &&
-                    currentNote.getDateCreated().equals(note.getDateCreated())) {
+                    currentNote.getDateCreated().equals(note.getDateCreated()) &&
+                    currentNote.getUserId() != null &&
+                    currentNote.getUserId().equals(currentUserId)) {
                 notesList.remove(i);
                 break;
             }
@@ -265,7 +278,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             ArrayList<Note> loadedNotes = gson.fromJson(json, type);
             ArrayList<Note> userNotes = new ArrayList<Note>();
             for (Note note : loadedNotes) {
-                if (note.getUserId() != null && note.getUserId().equals(userId)) {
+                if (note.getUserId() != null && note.getUserId().equals(currentUserId)) {
                     userNotes.add(note);
                 }
             }
