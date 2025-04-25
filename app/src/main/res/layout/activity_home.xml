@@ -45,15 +45,17 @@
                 android:textSize="@dimen/_20sdp"
                 android:textStyle="bold" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/profileButton"
-                android:layout_width="60dp"
-                android:layout_height="50dp"
-                android:backgroundTint="@color/colorInfo"
-                android:text="P"
-                android:layout_marginRight="@dimen/_10sdp"
-                android:textColor="@color/white"
-                android:textSize="@dimen/_14sdp" />
+                android:layout_width="@dimen/_40sdp"
+                android:layout_height="@dimen/_40sdp"
+                android:background="@drawable/create_new_note_button"
+                android:src="@drawable/ic_person"
+                android:padding="@dimen/_10sdp"
+                android:scaleType="fitXY"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                android:contentDescription="add new note button" />
             <Button
                 android:id="@+id/logoutButton"
                 android:layout_width="wrap_content"

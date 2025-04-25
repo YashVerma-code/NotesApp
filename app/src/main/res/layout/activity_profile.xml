@@ -219,23 +219,6 @@
                                 android:textSize="14sp" />
                         </LinearLayout>
                     </LinearLayout>
-
-                    <View
-                        android:id="@+id/notes_usage_bar"
-                        android:layout_width="match_parent"
-                        android:layout_height="6dp"
-                        android:layout_marginTop="20dp"
-                        android:background="@drawable/progress_bar_bg" />
-
-                    <TextView
-                        android:id="@+id/storage_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:layout_marginTop="8dp"
-                        android:text="Notes: 1.2 MB / 100 MB"
-                        android:textColor="#AFAFAF"
-                        android:textSize="12sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -252,91 +235,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/stats_card">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Preferences"
-                        android:textColor="@android:color/white"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <!-- Default Note Color -->
-                    <LinearLayout
-                        android:id="@+id/default_note_color_container"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Default Note Color"
-                            android:textColor="@android:color/white"
-                            android:textSize="16sp" />
-
-                        <View
-                            android:id="@+id/default_color_preview"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:background="@android:color/black" />
-                    </LinearLayout>
-
-                    <!-- Auto-save Toggle -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Auto-save Notes"
-                            android:textColor="@android:color/white"
-                            android:textSize="16sp" />
-
-                        <androidx.appcompat.widget.SwitchCompat
-                            android:id="@+id/auto_save_switch"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="true" />
-                    </LinearLayout>
-
-                    <!-- Dark Mode Toggle -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Dark Mode"
-                            android:textColor="@android:color/white"
-                            android:textSize="16sp" />
-
-                        <androidx.appcompat.widget.SwitchCompat
-                            android:id="@+id/dark_mode_switch"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="true" />
-                    </LinearLayout>
-
-                </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <!-- Account Section -->

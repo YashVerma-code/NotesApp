@@ -1,12 +1,15 @@
 package com.example.notesapp;
 
 import android.app.AlertDialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -30,17 +33,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class ProfileActivity extends AppCompatActivity {
 
     private ImageView backBtn, saveProfileBtn, profileImage, editProfileImage;
-    private TextView profileUsername, profileEmail, notesCount, storageText;
+    private TextView profileUsername, profileEmail, notesCount;
     private MaterialButton editProfileBtn;
-    private View defaultColorPreview, notesUsageBar;
-    private SwitchCompat autoSaveSwitch, darkModeSwitch;
-    private View defaultNoteColorContainer, changePasswordBtn, exportNotesBtn, deleteAccountBtn;
+    private View changePasswordBtn, exportNotesBtn, deleteAccountBtn;
     private TextView appVersion;
 
     private SharedPreferences sharedPreferences;
@@ -117,14 +120,6 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Stats
         notesCount = findViewById(R.id.notes_count);
-        notesUsageBar = findViewById(R.id.notes_usage_bar);
-        storageText = findViewById(R.id.storage_text);
-
-        // Preferences
-        defaultColorPreview = findViewById(R.id.default_color_preview);
-        defaultNoteColorContainer = findViewById(R.id.default_note_color_container);
-        autoSaveSwitch = findViewById(R.id.auto_save_switch);
-        darkModeSwitch = findViewById(R.id.dark_mode_switch);
 
         // Account
         changePasswordBtn = findViewById(R.id.change_password_btn);
@@ -151,19 +146,6 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Edit profile button
         editProfileBtn.setOnClickListener(v -> toggleEditMode());
-
-        // Default note color
-        defaultNoteColorContainer.setOnClickListener(v -> showColorPicker());
-
-        // Switch listeners
-        autoSaveSwitch.setOnCheckedChangeListener((buttonView, isChecked) ->
-                appPrefs.edit().putBoolean("autoSave", isChecked).apply());
-
-        darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            appPrefs.edit().putBoolean("darkMode", isChecked).apply();
-            Toast.makeText(this, "App restart required for theme change", Toast.LENGTH_SHORT).show();
-        });
-
         // Account options
         changePasswordBtn.setOnClickListener(v -> showChangePasswordDialog());
         exportNotesBtn.setOnClickListener(v -> exportNotes());
@@ -182,49 +164,12 @@ public class ProfileActivity extends AppCompatActivity {
             Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             profileImage.setImageBitmap(decodedBitmap);
         }
-
-        // Load app preferences
-        autoSaveSwitch.setChecked(appPrefs.getBoolean("autoSave", true));
-        darkModeSwitch.setChecked(appPrefs.getBoolean("darkMode", true));
-
-        // Load default note color
-        currentDefaultColor = appPrefs.getInt("defaultNoteColor", 0xFF000000);
-        defaultColorPreview.setBackgroundColor(currentDefaultColor);
     }
 
     private void updateStats() {
         ArrayList<Note> notes = loadNotes();
-
-        // Count notes and calculate storage
         int totalNotes = notes.size();
-        long totalStorageUsed = calculateNotesStorage(notes);
-
         notesCount.setText(String.valueOf(totalNotes));
-
-        // Calculate percentage for progress bar
-        long storageLimit = 100 * 1024 * 1024; // 100MB
-        float usagePercentage = (float) totalStorageUsed / storageLimit;
-
-        notesUsageBar.setScaleX(Math.min(usagePercentage, 1.0f));
-
-        String usedMB = String.format("%.1f", totalStorageUsed / (1024.0 * 1024.0));
-        storageText.setText("Notes: " + usedMB + " MB / 100 MB");
-    }
-
-    private long calculateNotesStorage(ArrayList<Note> notes) {
-        long totalSize = 0;
-        for (Note note : notes) {
-            // Calculate approximate size of note content
-            if (note.getContent() != null) {
-                totalSize += note.getContent().length() * 2; // Approximate char size in bytes
-            }
-            if (note.getTitle() != null) {
-                totalSize += note.getTitle().length() * 2;
-            }
-            // Add fixed overhead per note
-            totalSize += 200; // Metadata overhead
-        }
-        return totalSize;
     }
 
     private void toggleEditMode() {
@@ -314,32 +259,6 @@ public class ProfileActivity extends AppCompatActivity {
         userPrefs.edit().putString(currentUserId + "_profileImage", encodedImage).apply();
     }
 
-    private void showColorPicker() {
-        final int[] colors = {
-                0xFF000000, // Black
-                0xFF2196F3, // Blue
-                0xFF4CAF50, // Green
-                0xFFFF9800, // Orange
-                0xFFE91E63, // Pink
-                0xFF9C27B0  // Purple
-        };
-
-        final String[] colorNames = {
-                "Black", "Blue", "Green", "Orange", "Pink", "Purple"
-        };
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Choose Default Note Color");
-        builder.setSingleChoiceItems(colorNames, -1, (dialog, which) -> {
-            currentDefaultColor = colors[which];
-            defaultColorPreview.setBackgroundColor(currentDefaultColor);
-            appPrefs.edit().putInt("defaultNoteColor", currentDefaultColor).apply();
-            dialog.dismiss();
-        });
-
-        builder.show();
-    }
-
     private void showChangePasswordDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Change Password");
@@ -410,35 +329,37 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         try {
-            // Create a JSON file
+            // Convert notes to JSON
             Gson gson = new Gson();
             String jsonNotes = gson.toJson(notes);
 
-            // Create directory in Documents folder
-            File documentsDir = new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOCUMENTS), "NotesApp");
+            // Setup file details
+            String fileName = "notes_export_" + System.currentTimeMillis() + ".json";
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+            values.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
 
-            if (!documentsDir.exists()) {
-                documentsDir.mkdirs();
+            // Create and write to file
+            ContentResolver resolver = getContentResolver();
+            Uri fileUri = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                fileUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
             }
 
-            // Create file
-            String fileName = "notes_export_" + System.currentTimeMillis() + ".json";
-            File exportFile = new File(documentsDir, fileName);
-
-            // Write to file
-            FileOutputStream fos = new FileOutputStream(exportFile);
-            fos.write(jsonNotes.getBytes());
-            fos.close();
-
-            // Show success message with file path
-            Toast.makeText(this, "Notes exported to " + exportFile.getAbsolutePath(),
-                    Toast.LENGTH_LONG).show();
+            if (fileUri != null) {
+                try (OutputStream outputStream = resolver.openOutputStream(fileUri)) {
+                    outputStream.write(jsonNotes.getBytes(StandardCharsets.UTF_8));
+                    outputStream.flush();
+                    Toast.makeText(this, "Notes exported to Downloads", Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Toast.makeText(this, "Failed to create file", Toast.LENGTH_SHORT).show();
+            }
 
         } catch (Exception e) {
-            Toast.makeText(this, "Failed to export notes: " + e.getMessage(),
-                    Toast.LENGTH_SHORT).show();
             e.printStackTrace();
+            Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

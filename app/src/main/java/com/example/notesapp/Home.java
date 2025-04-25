@@ -128,7 +128,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         logoutButton = findViewById(R.id.logoutButton);
         addNoteButton = findViewById(R.id.addNoteButton);
-        Button profileButton = findViewById(R.id.profileButton); // Ensure this ID exists in your layout
+        ImageButton profileButton = findViewById(R.id.profileButton); // Ensure this ID exists in your layout
         profileButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
