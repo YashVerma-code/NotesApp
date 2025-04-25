@@ -46,6 +46,15 @@
                 android:textStyle="bold" />
 
             <Button
+                android:id="@+id/profileButton"
+                android:layout_width="60dp"
+                android:layout_height="50dp"
+                android:backgroundTint="@color/colorInfo"
+                android:text="P"
+                android:layout_marginRight="@dimen/_10sdp"
+                android:textColor="@color/white"
+                android:textSize="@dimen/_14sdp" />
+            <Button
                 android:id="@+id/logoutButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
