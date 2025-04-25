@@ -10,6 +10,7 @@ import android.graphics.Path;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -27,6 +28,7 @@ public class DrawingActivity extends AppCompatActivity {
     private ImageButton colorBlackBtn, colorRedBtn, colorBlueBtn, colorGreenBtn, colorYellowBtn;
     private SeekBar brushSizeSeekBar;
     private LinearLayout colorPalette;
+    private EditText drawingDescription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,11 +37,14 @@ public class DrawingActivity extends AppCompatActivity {
 
         // Initialize drawing view
         drawingView = findViewById(R.id.drawing_view);
+        drawingDescription = findViewById(R.id.drawingDescription);
 
         // Get intent data
         Intent intent = getIntent();
         boolean isDrawing = intent.getBooleanExtra("isDrawing", false);
         String description = intent.getStringExtra("description");
+
+        drawingDescription.setText(description);
 
         // Check if we have bitmap bytes (better for passing through intent)
         byte[] drawingBytes = intent.getByteArrayExtra("drawing_bytes");
@@ -100,6 +105,7 @@ public class DrawingActivity extends AppCompatActivity {
         redoBtn.setOnClickListener(v -> drawingView.redo());
         clearBtn.setOnClickListener(v -> drawingView.clearCanvas());
 
+        // In DrawingActivity.java - update saveBtn.setOnClickListener
         saveBtn.setOnClickListener(v -> {
             Bitmap newBitmap = drawingView.getBitmap();
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -108,7 +114,14 @@ public class DrawingActivity extends AppCompatActivity {
 
             Intent resultIntent = new Intent();
             resultIntent.putExtra("drawing_image", byteArray);
-            resultIntent.putExtra("description", description); // Return the description as well
+            resultIntent.putExtra("description", drawingDescription.getText().toString().trim()); // New description
+
+            // Pass back the original description to identify which drawing we're updating
+            String originalDescription = getIntent().getStringExtra("original_description");
+            if (originalDescription != null) {
+                resultIntent.putExtra("original_description", originalDescription);
+            }
+
             setResult(RESULT_OK, resultIntent);
             finish();
         });
