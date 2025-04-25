@@ -88,15 +88,22 @@ public class NotesActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> imagePickerLauncher;
     private Uri imageUri;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notes);
 
-        SharedPreferences userPrefs = getSharedPreferences("UserData", MODE_PRIVATE);
-        userId = userPrefs.getString("username", "null"); // Use a default or handle null if needed
+        userId = getIntent().getStringExtra("userId");
+        if (userId == null) {
+            SharedPreferences sharedPreferences = getSharedPreferences("NotesAppPrefs", MODE_PRIVATE);
+            userId = sharedPreferences.getString("userId", null);
 
+            if (userId == null) {
+                Toast.makeText(this, "User not found. Please login again.", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+        }
 
         mainLayout = findViewById(R.id.mainLayout);
         colorPickerLayout = findViewById(R.id.colorPickerLayout);
@@ -232,7 +239,7 @@ public class NotesActivity extends AppCompatActivity {
                     .build();
 
             Request request = new Request.Builder()
-                    .url("https://d818-2402-3a80-752-9077-78f7-2826-5943-508e.ngrok-free.app/extract-text")
+                    .url("https://b794-2402-3a80-749-3cc0-f9a3-9b75-fb36-9328.ngrok-free.app/extract-text")
                     .post(requestBody)
                     .build();
 

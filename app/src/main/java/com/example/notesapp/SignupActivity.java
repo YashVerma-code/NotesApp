@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -12,6 +13,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -88,15 +93,21 @@ public class SignupActivity extends AppCompatActivity {
 
         // Check if username already exists
         SharedPreferences userPrefs = getSharedPreferences("UserData", MODE_PRIVATE);
-        if (userPrefs.contains(username)) {
+        if (userPrefs.contains(username + "_userId")) {
             usernameEditText.setError("Username already exists");
             return;
         }
-
+        String userId = generateUserId();
+        String hashedPassword = hashPassword(password);
+        if (hashedPassword == null) {
+            Toast.makeText(SignupActivity.this, "Error creating account. Please try again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         // Save user data to SharedPreferences
         SharedPreferences.Editor editor = userPrefs.edit();
-        editor.putString(username, password);
+        editor.putString(username + "_password", hashedPassword);
         editor.putString(username + "_email", email);
+        editor.putString(username + "_userId", userId);
         editor.apply();
 
         // Show success message
@@ -104,5 +115,18 @@ public class SignupActivity extends AppCompatActivity {
 
         // Navigate to login screen
         finish();
+    }
+    private String generateUserId() {
+        return UUID.randomUUID().toString();
+    }
+    private String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encodedHash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+            return Base64.encodeToString(encodedHash, Base64.NO_WRAP);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
