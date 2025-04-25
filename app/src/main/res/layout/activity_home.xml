@@ -5,6 +5,7 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/light_background"
     tools:openDrawer="start">
 
     <!-- Main content -->
@@ -12,14 +13,14 @@
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingHorizontal="@dimen/_12sdp"
+        android:paddingHorizontal="@dimen/_16sdp"
         tools:context=".NotesActivity">
 
         <LinearLayout
             android:id="@+id/topBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_8sdp"
+            android:layout_marginTop="@dimen/_12sdp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
@@ -28,59 +29,73 @@
 
             <ImageButton
                 android:id="@+id/menuButton"
-                android:layout_width="@dimen/_30sdp"
-                android:layout_height="@dimen/_30sdp"
-                android:background="@drawable/transparent_bg"
+                android:layout_width="@dimen/_36sdp"
+                android:layout_height="@dimen/_36sdp"
+
                 android:contentDescription="Menu Button"
-                android:src="@drawable/icon_menu" />
+                android:elevation="@dimen/_2sdp"
+                android:padding="@dimen/_8sdp"
+                android:src="@drawable/icon_menu"
+                app:tint="@color/primary_color" />
 
             <TextView
                 android:id="@+id/title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+
                 android:gravity="center"
                 android:text="My Notes"
-                android:textColor="@color/black"
-                android:textSize="@dimen/_20sdp"
-                android:textStyle="bold" />
+                android:textColor="@color/primary_text"
+                android:textSize="@dimen/_20sdp" />
 
             <Button
                 android:id="@+id/logoutButton"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/dark_background"
+                android:layout_height="@dimen/_36sdp"
+                android:backgroundTint="@color/accent_color"
+
+                android:paddingHorizontal="@dimen/_12sdp"
                 android:text="Logout"
+                android:textAllCaps="false"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_14sdp" />
+                android:textSize="@dimen/_12sdp"
+                app:cornerRadius="@dimen/_18sdp" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/searchNotesLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/topBar"
-            android:background="@drawable/search_bg"
-            android:padding="@dimen/_5sdp"
-            android:layout_marginTop="@dimen/_10sdp">
+            android:layout_height="@dimen/_45sdp"
+            android:layout_marginTop="@dimen/_16sdp"
+
+            android:elevation="@dimen/_2sdp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/_12sdp"
+            app:layout_constraintTop_toBottomOf="@+id/topBar">
 
             <ImageView
-                android:layout_width="@dimen/_30sdp"
-                android:layout_height="@dimen/_30sdp"
-                android:src="@drawable/icon_search"
+                android:layout_width="@dimen/_20sdp"
+                android:layout_height="@dimen/_20sdp"
                 android:layout_marginEnd="@dimen/_8sdp"
-                android:contentDescription="search icon" />
+                android:contentDescription="search icon"
+                android:src="@drawable/icon_search"
+                app:tint="@color/secondary_text" />
 
             <EditText
                 android:id="@+id/searchNotes"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:inputType="text"
                 android:background="@null"
-                android:textColor="@color/black"
+
+                android:hint="Search your notes..."
                 android:imeOptions="actionSearch"
                 android:importantForAutofill="no"
-                android:hint="Search Notes" />
+                android:inputType="text"
+                android:textColor="@color/primary_text"
+                android:textColorHint="@color/hint_text"
+                android:textSize="@dimen/_14sdp" />
         </LinearLayout>
 
         <!-- RecyclerView for note cards -->
@@ -88,24 +103,62 @@
             android:id="@+id/notesRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="@dimen/_10sdp"
-            app:layout_constraintTop_toBottomOf="@id/searchNotesLayout"
+            android:layout_marginTop="@dimen/_16sdp"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/_70sdp"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:paddingBottom="@dimen/_60sdp"
-            android:clipToPadding="false"/>
+            app:layout_constraintTop_toBottomOf="@id/searchNotesLayout" />
 
-        <ImageButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/addNoteButton"
-            android:layout_width="@dimen/_50sdp"
-            android:layout_height="@dimen/_50sdp"
-            android:background="@drawable/create_new_note_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/_4sdp"
+            android:layout_marginBottom="@dimen/_16sdp"
+            android:contentDescription="add new note button"
             android:src="@drawable/icon_add"
-            android:padding="@dimen/_10sdp"
-            android:scaleType="fitXY"
+            app:backgroundTint="@color/primary_color"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginBottom="@dimen/_12sdp"
-            android:contentDescription="add new note button" />
+            app:tint="@color/white"
+            app:elevation="@dimen/_6sdp"
+            app:fabSize="normal"
+            app:maxImageSize="@dimen/_24sdp" />
+
+        <!-- Empty state view -->
+        <LinearLayout
+            android:id="@+id/emptyStateView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/searchNotesLayout">
+
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_16sdp"
+
+                android:gravity="center"
+                android:text="No notes yet"
+                android:textColor="@color/secondary_text"
+                android:textSize="@dimen/_16sdp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/_24sdp"
+                android:layout_marginTop="@dimen/_8sdp"
+
+                android:gravity="center"
+                android:text="Tap the + button to create your first note"
+                android:textColor="@color/tertiary_text"
+                android:textSize="@dimen/_14sdp" />
+        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Navigation drawer -->
@@ -114,8 +167,10 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:background="@color/light_background"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header_layout"
+
         app:menu="@menu/drawer_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
