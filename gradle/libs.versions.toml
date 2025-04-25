@@ -10,6 +10,8 @@ constraintlayout = "2.2.1"
 sdp = "1.0.6"
 ssp = "1.0.6"
 okhttp = "4.9.3"
+cardview = "1.0.0"
+photoView = "2.3.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -22,6 +24,8 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 sdp = { group = "com.intuit.sdp", name = "sdp-android", version.ref = "sdp" }
 ssp = { group = "com.intuit.ssp", name = "ssp-android", version.ref = "ssp" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+cardview = {module = "androidx.cardview:cardview", version.ref = "cardview"}
+photoView = {module = "com.github.chrisbanes:PhotoView", version.ref = "photoView"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
