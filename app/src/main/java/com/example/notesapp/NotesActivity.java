@@ -246,7 +246,6 @@ public class NotesActivity extends AppCompatActivity {
         setupShakeDetector();
     }
 
-    // Add this method to NotesActivity class
     private void setupShakeDetector() {
         // Get the sensor manager
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -321,7 +320,6 @@ public class NotesActivity extends AppCompatActivity {
         drawingCount = 0;
     }
 
-    // Add these methods to register and unregister the sensor listener
     @Override
     protected void onResume() {
         super.onResume();
