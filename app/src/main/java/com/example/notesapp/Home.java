@@ -94,6 +94,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         // Set up delete listener for adapter
         notesAdapter.setOnNoteDeleteListener(note -> {
             confirmDeleteNote(note);
+            confirmDeleteNote(note);
         });
 
         // Set up search functionality
