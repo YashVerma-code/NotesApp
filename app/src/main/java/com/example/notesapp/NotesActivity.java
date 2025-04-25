@@ -71,9 +71,17 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+// Add these imports at the top with your other imports
+import android.app.AlertDialog;
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+
+// Inside NotesActivity class, add these variables
 
 public class NotesActivity extends AppCompatActivity {
-
+    private SensorManager sensorManager;
+    private ShakeDetector shakeDetector;
     private ConstraintLayout mainLayout;
     private LinearLayout colorPickerLayout;
     private ImageView colorIcon;
@@ -235,6 +243,101 @@ public class NotesActivity extends AppCompatActivity {
                 finish();
             }
         });
+        setupShakeDetector();
+    }
+
+    private void setupShakeDetector() {
+        // Get the sensor manager
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        // Initialize the shake detector
+        shakeDetector = new ShakeDetector(new ShakeDetector.OnShakeListener() {
+            @Override
+            public void onShake() {
+                // Show confirmation dialog on main thread
+                runOnUiThread(() -> showClearNoteConfirmationDialog());
+            }
+        });
+    }
+
+    // Add this method to show the clear confirmation dialog
+    private void showClearNoteConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Clear Note Content");
+        builder.setMessage("Are you sure you want to clear this note's content?");
+
+        builder.setPositiveButton("Clear", (dialog, which) -> {
+            // Clear the note content but keep the note
+            clearNoteContent();
+            Toast.makeText(NotesActivity.this, "Note content cleared", Toast.LENGTH_SHORT).show();
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            dialog.dismiss();
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    // Add this method to clear the note content
+    private void clearNoteContent() {
+        // Clear EditText fields
+        contentEditText.setText("");
+
+        // If there's a current note, update it with empty content
+        if (currentNote != null) {
+            ArrayList<Note> notesList = loadNotes();
+
+            for (int i = 0; i < notesList.size(); i++) {
+                Note note = notesList.get(i);
+                if (note != null && note.getDateCreated() != null &&
+                        currentNote.getDateCreated() != null &&
+                        note.getDateCreated().equals(currentNote.getDateCreated())) {
+                    note.setContent("");
+                    currentNote.setContent("");
+                    break;
+                }
+            }
+
+            // Save the updated notes list
+            saveNotes(notesList);
+        }
+
+        // Clear any images or checkboxes if they exist
+        if (imageContent != null) {
+            imageContent.removeAllViews();
+            imageContainer.setVisibility(View.GONE);
+        }
+
+        if (checkboxContainer != null) {
+            checkboxContainer.removeAllViews();
+        }
+
+        // Clear image and drawing lists
+        imageList.clear();
+        drawingList.clear();
+        drawingCount = 0;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Register the sensor listener
+        if (sensorManager != null) {
+            sensorManager.registerListener(shakeDetector,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                    SensorManager.SENSOR_DELAY_UI);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        // Unregister the sensor listener to save battery
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(shakeDetector);
+        }
+        super.onPause();
     }
 
     private byte[] getBytes(InputStream inputStream) throws IOException {
@@ -348,45 +451,131 @@ public class NotesActivity extends AppCompatActivity {
                 });
 
         // Register drawing activity launcher
+        // Register drawing activity launcher
+        // Modify the drawingLauncher result handling in setupActivityResultLaunchers()
         drawingLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         byte[] drawingBytes = result.getData().getByteArrayExtra("drawing_image");
-                        String description = result.getData().getStringExtra("description");
+                        String newDescription = result.getData().getStringExtra("description");
+                        String originalDescription = result.getData().getStringExtra("original_description");
 
                         if (drawingBytes != null) {
                             Bitmap drawingBitmap = BitmapFactory.decodeByteArray(drawingBytes, 0, drawingBytes.length);
 
-                            // Find if we're editing an existing drawing or creating a new one
+                            // Find if we're editing an existing drawing
                             boolean isUpdatingExisting = false;
+                            int existingIndex = -1;
 
-                            if (description != null) {
+                            // First try to find by original description
+                            if (originalDescription != null) {
                                 for (int i = 0; i < drawingList.size(); i++) {
-                                    if (drawingList.get(i).getDescription().equals(description)) {
-                                        // Update existing drawing
-                                        drawingList.get(i).setBitmap(drawingBitmap);
-
-                                        // Update UI
-                                        if (i < imageContent.getChildCount() &&
-                                                imageContent.getChildAt(i) instanceof ImageView) {
-                                            ((ImageView) imageContent.getChildAt(i)).setImageBitmap(drawingBitmap);
-                                        }
-
+                                    if (drawingList.get(i).getDescription().equals(originalDescription)) {
+                                        existingIndex = i;
                                         isUpdatingExisting = true;
                                         break;
                                     }
                                 }
                             }
 
-                            // If not updating an existing drawing, add as new
-                            if (!isUpdatingExisting) {
+                            if (isUpdatingExisting) {
+                                // Update existing drawing bitmap and description
+                                Drawing existingDrawing = drawingList.get(existingIndex);
+                                existingDrawing.setBitmap(drawingBitmap);
+
+                                // Update description if changed
+                                if (newDescription != null && !originalDescription.equals(newDescription)) {
+                                    existingDrawing.setDescription(newDescription);
+                                    updateDrawingHyperlinkInContent(originalDescription, newDescription);
+                                }
+
+                                // Update the image in imageContent (horizontal scrollview)
+                                // Find and update the corresponding ImageView
+                                for (int i = 0; i < imageContent.getChildCount(); i++) {
+                                    View child = imageContent.getChildAt(i);
+                                    ImageView imageView = child.findViewById(R.id.itemImage);
+                                    BitmapDrawable drawable = (BitmapDrawable) imageView.getDrawable();
+                                    if (drawable != null) {
+                                        Bitmap currentBitmap = drawable.getBitmap();
+                                        // Check if this is the image we need to update
+                                        // You can use the position/index instead of bitmap comparison
+                                        if (i == existingIndex) {
+                                            imageView.setImageBitmap(drawingBitmap);
+                                            break;
+                                        }
+                                    }
+                                }
+                            } else {
+                                // This is a new drawing
+                                String finalDescription = (newDescription != null && !newDescription.isEmpty()) ?
+                                        newDescription : "Drawing " + (drawingCount + 1);
+
+                                // Create and add new drawing
+                                Drawing newDrawing = new Drawing(drawingBitmap, finalDescription);
+                                drawingList.add(newDrawing);
                                 addImageToNote(drawingBitmap, true);
                             }
                         }
                     }
                 });
 
+
+    }
+
+    private void updateDrawingHyperlinkInContent(String oldDescription, String newDescription) {
+        // Get the current content with all existing spans
+        Editable content = contentEditText.getText();
+        String contentStr = content.toString();
+
+        // Look for the old link format without brackets
+        int startIndex = contentStr.indexOf("\n" + oldDescription + "\n");
+
+        if (startIndex != -1) {
+            startIndex += 1; // Skip the first newline
+            int endIndex = startIndex + oldDescription.length();
+
+            // Replace the text without removing the span
+            content.replace(startIndex, endIndex, newDescription);
+
+            // Update the clickable span
+            ClickableSpan[] spans = content.getSpans(startIndex, startIndex + newDescription.length(), ClickableSpan.class);
+            if (spans.length > 0) {
+                // Remove old span
+                content.removeSpan(spans[0]);
+
+                // Create new clickable span with updated description
+                ClickableSpan clickableSpan = new ClickableSpan() {
+                    @Override
+                    public void onClick(View widget) {
+                        // Find the drawing by new name
+                        for (Drawing drawing : drawingList) {
+                            if (drawing.getDescription().equals(newDescription)) {
+                                openDrawingInCanvas(drawing.getBitmap());
+                                break;
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void updateDrawState(TextPaint ds) {
+                        super.updateDrawState(ds);
+                        // Change link color to white
+                        ds.setColor(Color.WHITE);
+                        ds.setUnderlineText(true);
+                    }
+                };
+
+                // Apply the new span
+                content.setSpan(clickableSpan, startIndex, startIndex + newDescription.length(),
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                // Update color span to white
+                content.setSpan(new ForegroundColorSpan(Color.WHITE),
+                        startIndex, startIndex + newDescription.length(),
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+        }
     }
 
     private void showBottomSheet() {
@@ -630,21 +819,18 @@ public class NotesActivity extends AppCompatActivity {
 
     private void openDrawingInCanvas(Bitmap bitmap) {
         // Find the drawing description based on bitmap
-        String description = "Drawing";
-        int drawingIndex = -1;
+        String description = null;
 
-        for (int i = 0; i < drawingList.size(); i++) {
-            Drawing drawing = drawingList.get(i);
-            // Note: sameAs can be computationally expensive, you might want a different way to identify drawings
+        for (Drawing drawing : drawingList) {
+            // Note: sameAs can be computationally expensive
             if (drawing.getBitmap().sameAs(bitmap)) {
                 description = drawing.getDescription();
-                drawingIndex = i;
                 break;
             }
         }
 
         // If we couldn't find a matching drawing, create a new one
-        if (drawingIndex == -1) {
+        if (description == null) {
             drawingCount++;
             description = "Drawing " + drawingCount;
         }
@@ -659,6 +845,7 @@ public class NotesActivity extends AppCompatActivity {
 
         intent.putExtra("drawing_bytes", byteArray);
         intent.putExtra("description", description);
+        intent.putExtra("original_description", description); // Add this to track which drawing is being edited
 
         drawingLauncher.launch(intent);
     }
@@ -690,19 +877,29 @@ public class NotesActivity extends AppCompatActivity {
         // Make container visible if needed
         imageContainer.setVisibility(View.VISIBLE);
 
-        // Create and add ImageView
-        ImageView imageView = new ImageView(this);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                dpToPx(200), dpToPx(200));
-        layoutParams.setMargins(dpToPx(4), 0, dpToPx(4), 0);
-        imageView.setLayoutParams(layoutParams);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        // Inflate the custom image item layout
+        View imageItemView = LayoutInflater.from(this).inflate(R.layout.image_item, imageContent, false);
+        ImageView imageView = imageItemView.findViewById(R.id.itemImage);
+        View drawingIndicator = imageItemView.findViewById(R.id.drawingIndicator);
+
+        // Set the image bitmap
         imageView.setImageBitmap(bitmap);
+
+        // Show drawing indicator if it's a drawing
+        if (isDrawing) {
+            drawingIndicator.setVisibility(View.VISIBLE);
+        } else {
+            drawingIndicator.setVisibility(View.GONE);
+        }
+
+        // Apply fade-in animation
+        imageItemView.setAlpha(0f);
+        imageItemView.animate().alpha(1f).setDuration(300).start();
 
         final boolean finalIsDrawing = isDrawing;
 
         // Set proper click listener for this image
-        imageView.setOnClickListener(v -> {
+        imageItemView.setOnClickListener(v -> {
             if (finalIsDrawing) {
                 // Retrieve bitmap directly from ImageView
                 BitmapDrawable drawable = (BitmapDrawable) imageView.getDrawable();
@@ -711,12 +908,12 @@ public class NotesActivity extends AppCompatActivity {
                     openDrawingInCanvas(clickedBitmap);
                 }
             } else {
-                showImageOptions(imageView, bitmap);
+                showImageOptions(imageItemView, bitmap);
             }
         });
 
         // Add to main container
-        imageContent.addView(imageView);
+        imageContent.addView(imageItemView);
 
         // Add to tracking lists
         Map<Bitmap, Boolean> newMap = new HashMap<>();
@@ -725,14 +922,32 @@ public class NotesActivity extends AppCompatActivity {
 
         // If it's a drawing, add to drawing list and create hyperlink
         if (isDrawing) {
-            drawingCount++;
-            Drawing newDrawing = new Drawing(bitmap, "Drawing " + drawingCount);
-            drawingList.add(newDrawing);
+            // Create a default description for new drawings
+            String description = "";
 
-            // Add hyperlink to content
-            insertDrawingHyperlinkToContent("Drawing " + drawingCount);
+            // Check if this drawing already exists in drawingList (when returned from DrawingActivity)
+            boolean found = false;
+            for (Drawing drawing : drawingList) {
+                if (drawing.getBitmap().sameAs(bitmap)) {
+                    description = drawing.getDescription();
+                    found = true;
+                    break;
+                }
+            }
+
+            // If not found, create a new drawing with a default name
+            if (!found) {
+                drawingCount++;
+                description = "Drawing " + drawingCount;
+                Drawing newDrawing = new Drawing(bitmap, description);
+                drawingList.add(newDrawing);
+            }
+
+            // Add hyperlink to content using the actual description
+            insertDrawingHyperlinkToContent(description);
         }
     }
+
 
 
     private void insertDrawingHyperlinkToContent(String drawingName) {
@@ -741,20 +956,20 @@ public class NotesActivity extends AppCompatActivity {
         int currentPosition = contentEditText.getSelectionStart();
         if (currentPosition == -1) currentPosition = currentContent.length();
 
-        // Create the link text to insert
-        String linkText = "\n[" + drawingName + "]\n";
+        // Create the link text without brackets
+        String linkText = "\n" + drawingName + "\n";
 
         // Insert the text without disturbing existing spans
         contentEditText.getText().insert(currentPosition, linkText);
 
         // Now add the span to just the new link text
-        int linkStart = currentPosition;
-        int linkEnd = linkStart + linkText.length() - 1; // -1 to exclude the final newline from the link
+        int linkStart = currentPosition + 1; // +1 to skip the first newline
+        int linkEnd = linkStart + drawingName.length();
 
         // Store a reference to the drawing
         final String finalDrawingName = drawingName;
 
-        // Create the clickable span
+        // Create the clickable span with white text
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View widget) {
@@ -770,15 +985,15 @@ public class NotesActivity extends AppCompatActivity {
             @Override
             public void updateDrawState(TextPaint ds) {
                 super.updateDrawState(ds);
-                ds.setColor(Color.BLUE);
+                // Change link color to white
+                ds.setColor(Color.WHITE);
                 ds.setUnderlineText(true);
             }
         };
 
         // Apply the spans to just the new text
         contentEditText.getText().setSpan(clickableSpan, linkStart, linkEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        contentEditText.getText().setSpan(new ForegroundColorSpan(Color.BLUE), linkStart, linkEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        contentEditText.getText().setSpan(new UnderlineSpan(), linkStart, linkEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        contentEditText.getText().setSpan(new ForegroundColorSpan(Color.WHITE), linkStart, linkEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make sure links are clickable
         contentEditText.setMovementMethod(LinkMovementMethod.getInstance());
@@ -789,7 +1004,8 @@ public class NotesActivity extends AppCompatActivity {
 
 
 
-    private void showImageOptions(ImageView imageView, Bitmap bitmap) {
+    private void showImageOptions(View imageItemView, Bitmap bitmap) {
+        // Create a modern bottom sheet with Material Design styling
         BottomSheetDialog optionsDialog = new BottomSheetDialog(NotesActivity.this);
         View optionsView = LayoutInflater.from(getApplicationContext())
                 .inflate(R.layout.image_options_layout, null);
@@ -804,13 +1020,29 @@ public class NotesActivity extends AppCompatActivity {
         });
 
         removeImage.setOnClickListener(view -> {
-            imageContent.removeView(imageView);
-            imageList.remove(bitmap);
-            if (imageContent.getChildCount() == 0) {
-                imageContainer.setVisibility(View.GONE);
-                View scrollViewParent = (View) imageContent.getParent().getParent();
-                scrollViewParent.setVisibility(View.GONE);
-            }
+            // Fade out animation before removal
+            imageItemView.animate()
+                    .alpha(0f)
+                    .setDuration(200)
+                    .withEndAction(() -> {
+                        imageContent.removeView(imageItemView);
+
+                        // Remove from imageList
+                        for (int i = 0; i < imageList.size(); i++) {
+                            Map<Bitmap, Boolean> item = imageList.get(i);
+                            if (item.containsKey(bitmap)) {
+                                imageList.remove(i);
+                                break;
+                            }
+                        }
+
+                        // Hide container if no more images
+                        if (imageContent.getChildCount() == 0) {
+                            imageContainer.setVisibility(View.GONE);
+                        }
+                    })
+                    .start();
+
             optionsDialog.dismiss();
         });
 
@@ -818,16 +1050,29 @@ public class NotesActivity extends AppCompatActivity {
     }
 
     private void showImageFullScreen(Bitmap bitmap) {
-        Dialog fullScreenDialog = new Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-        ImageView fullScreenImage = new ImageView(this);
-        fullScreenImage.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        fullScreenImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        Dialog fullScreenDialog = new Dialog(this, R.style.FullScreenImageDialogTheme);
+
+        View fullScreenView = LayoutInflater.from(this).inflate(R.layout.fullscreen_image, null);
+        ImageView fullScreenImage = fullScreenView.findViewById(R.id.fullscreen_image);
+        ImageView closeButton = fullScreenView.findViewById(R.id.close_button);
+
         fullScreenImage.setImageBitmap(bitmap);
 
-        fullScreenImage.setOnClickListener(v -> fullScreenDialog.dismiss());
-        fullScreenDialog.setContentView(fullScreenImage);
+        closeButton.setOnClickListener(v -> {
+            // Add a nice fade out animation
+            fullScreenView.animate()
+                    .alpha(0f)
+                    .setDuration(200)
+                    .withEndAction(() -> fullScreenDialog.dismiss())
+                    .start();
+        });
+
+        fullScreenDialog.setContentView(fullScreenView);
+
+        // Start with fade in animation
+        fullScreenView.setAlpha(0f);
         fullScreenDialog.show();
+        fullScreenView.animate().alpha(1f).setDuration(300).start();
     }
 
     private int dpToPx(int dp) {
