@@ -71,9 +71,17 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+// Add these imports at the top with your other imports
+import android.app.AlertDialog;
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+
+// Inside NotesActivity class, add these variables
 
 public class NotesActivity extends AppCompatActivity {
-
+    private SensorManager sensorManager;
+    private ShakeDetector shakeDetector;
     private ConstraintLayout mainLayout;
     private LinearLayout colorPickerLayout;
     private ImageView colorIcon;
@@ -235,6 +243,103 @@ public class NotesActivity extends AppCompatActivity {
                 finish();
             }
         });
+        setupShakeDetector();
+    }
+
+    // Add this method to NotesActivity class
+    private void setupShakeDetector() {
+        // Get the sensor manager
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        // Initialize the shake detector
+        shakeDetector = new ShakeDetector(new ShakeDetector.OnShakeListener() {
+            @Override
+            public void onShake() {
+                // Show confirmation dialog on main thread
+                runOnUiThread(() -> showClearNoteConfirmationDialog());
+            }
+        });
+    }
+
+    // Add this method to show the clear confirmation dialog
+    private void showClearNoteConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Clear Note Content");
+        builder.setMessage("Are you sure you want to clear this note's content?");
+
+        builder.setPositiveButton("Clear", (dialog, which) -> {
+            // Clear the note content but keep the note
+            clearNoteContent();
+            Toast.makeText(NotesActivity.this, "Note content cleared", Toast.LENGTH_SHORT).show();
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            dialog.dismiss();
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    // Add this method to clear the note content
+    private void clearNoteContent() {
+        // Clear EditText fields
+        contentEditText.setText("");
+
+        // If there's a current note, update it with empty content
+        if (currentNote != null) {
+            ArrayList<Note> notesList = loadNotes();
+
+            for (int i = 0; i < notesList.size(); i++) {
+                Note note = notesList.get(i);
+                if (note != null && note.getDateCreated() != null &&
+                        currentNote.getDateCreated() != null &&
+                        note.getDateCreated().equals(currentNote.getDateCreated())) {
+                    note.setContent("");
+                    currentNote.setContent("");
+                    break;
+                }
+            }
+
+            // Save the updated notes list
+            saveNotes(notesList);
+        }
+
+        // Clear any images or checkboxes if they exist
+        if (imageContent != null) {
+            imageContent.removeAllViews();
+            imageContainer.setVisibility(View.GONE);
+        }
+
+        if (checkboxContainer != null) {
+            checkboxContainer.removeAllViews();
+        }
+
+        // Clear image and drawing lists
+        imageList.clear();
+        drawingList.clear();
+        drawingCount = 0;
+    }
+
+    // Add these methods to register and unregister the sensor listener
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Register the sensor listener
+        if (sensorManager != null) {
+            sensorManager.registerListener(shakeDetector,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                    SensorManager.SENSOR_DELAY_UI);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        // Unregister the sensor listener to save battery
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(shakeDetector);
+        }
+        super.onPause();
     }
 
     private byte[] getBytes(InputStream inputStream) throws IOException {
