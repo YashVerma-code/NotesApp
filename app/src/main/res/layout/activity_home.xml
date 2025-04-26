@@ -31,19 +31,19 @@
                 android:id="@+id/menuButton"
                 android:layout_width="@dimen/_36sdp"
                 android:layout_height="@dimen/_36sdp"
-
                 android:contentDescription="Menu Button"
                 android:elevation="@dimen/_2sdp"
                 android:padding="@dimen/_8sdp"
                 android:src="@drawable/icon_menu"
-                app:tint="@color/primary_color" />
+                app:tint="@color/primary_color"
+                android:background="@color/white"/>
 
             <TextView
                 android:id="@+id/title"
-                android:layout_width="0dp"
+                android:layout_width="180dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
 
+                android:layout_weight="1"
                 android:gravity="center"
                 android:text="My Notes"
                 android:textColor="@color/primary_text"
@@ -51,15 +51,17 @@
 
             <ImageButton
                 android:id="@+id/profileButton"
-                android:layout_width="@dimen/_40sdp"
-                android:layout_height="@dimen/_40sdp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginRight="5dp"
                 android:background="@drawable/create_new_note_button"
-                android:src="@drawable/ic_person"
-                android:padding="@dimen/_10sdp"
+                android:contentDescription="add new note button"
+                android:padding="10sp"
                 android:scaleType="fitXY"
+                android:src="@drawable/ic_person"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                android:contentDescription="add new note button" />
+                app:layout_constraintRight_toRightOf="parent" />
+
             <Button
                 android:id="@+id/logoutButton"
                 android:layout_width="wrap_content"
@@ -129,12 +131,12 @@
             android:contentDescription="add new note button"
             android:src="@drawable/icon_add"
             app:backgroundTint="@color/primary_color"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:tint="@color/white"
             app:elevation="@dimen/_6sdp"
             app:fabSize="normal"
-            app:maxImageSize="@dimen/_24sdp" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:maxImageSize="@dimen/_24sdp"
+            app:tint="@color/white" />
 
         <!-- Empty state view -->
         <LinearLayout
@@ -146,7 +148,6 @@
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/searchNotesLayout">
-
 
 
             <TextView
@@ -181,7 +182,6 @@
         android:background="@color/light_background"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header_layout"
-
         app:menu="@menu/drawer_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

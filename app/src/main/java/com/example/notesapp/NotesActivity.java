@@ -119,7 +119,9 @@ public class NotesActivity extends AppCompatActivity {
     private DrawingView canvasView;
 
     // Drawing feature constant
-    private static final int DRAWING_REQUEST_CODE = 101;
+    private ImageView deleteBtn;
+
+// Inside onCreate(), after other button initializations, add:
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,7 +146,10 @@ public class NotesActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         titleEditText = findViewById(R.id.titleEditText);
         contentEditText = findViewById(R.id.contentEditText);
-
+        deleteBtn = findViewById(R.id.delete_btn);
+        deleteBtn.setOnClickListener(view->{
+            showDeleteConfirmationDialog();
+        });
         // Set default background color
         currentBackgroundColor = ContextCompat.getColor(this, R.color.black);
 
@@ -225,6 +230,7 @@ public class NotesActivity extends AppCompatActivity {
         saveBtn.setOnClickListener(view -> {
             saveNote();
             Toast.makeText(NotesActivity.this, "Note saved", Toast.LENGTH_SHORT).show();
+            finish();
         });
 
         // Add edited textview click listener
@@ -246,6 +252,56 @@ public class NotesActivity extends AppCompatActivity {
         setupShakeDetector();
     }
 
+    private void showDeleteConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Delete Note");
+        builder.setMessage("Are you sure you want to delete this note?");
+
+        builder.setPositiveButton("Delete", (dialog, which) -> {
+            deleteNote();
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            dialog.dismiss();
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void deleteNote() {
+        // Only attempt to delete if this is an existing note
+        if (currentNote != null) {
+            ArrayList<Note> notesList = loadNotes();
+            boolean removed = false;
+
+            for (int i = 0; i < notesList.size(); i++) {
+                Note note = notesList.get(i);
+                if (note != null && note.getDateCreated() != null &&
+                        currentNote.getDateCreated() != null &&
+                        note.getDateCreated().equals(currentNote.getDateCreated())) {
+                    notesList.remove(i);
+                    removed = true;
+                    break;
+                }
+            }
+
+            if (removed) {
+                // Save the updated notes list
+                saveNotes(notesList);
+                Toast.makeText(NotesActivity.this, "Note deleted", Toast.LENGTH_SHORT).show();
+
+                // Return to the Home activity
+                navigateToHome();
+            } else {
+                Toast.makeText(NotesActivity.this, "Failed to delete note", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            // This is a new unsaved note
+            Toast.makeText(NotesActivity.this, "Note discarded", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
     private void setupShakeDetector() {
         // Get the sensor manager
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);

@@ -1,5 +1,6 @@
 package com.example.notesapp;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -78,6 +79,7 @@ public class DrawingView extends View {
         drawCanvas.drawColor(Color.WHITE); // White background
     }
 
+    @SuppressLint("DrawAllocation")
     @Override
     protected void onDraw(Canvas canvas) {
         // First draw the base white canvas
